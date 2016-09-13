@@ -1,0 +1,61 @@
+---
+
+- name: Gather OS-specific variables
+  include_vars: "{{ ansible_distribution }}.yml"
+  tags: vars
+
+- tags: install
+  block:
+  - name: Install dependencies for guacamole
+    package: name={{ item }} state=latest
+    with_items: '{{ PACKAGES }}'
+  - name: install libvncserver
+    package: name=libvncserver-dev state=latest
+  - name: Copy over guacamole-server source
+    copy: src="files/guacamole-server-{{ GUACAMOLE_VERSION }}.tar.gz" dest=/tmp/
+  - name: Extract the guacamole-server source
+    unarchive: src="/tmp/guacamole-server-{{ GUACAMOLE_VERSION }}.tar.gz" copy=no dest="/tmp/"
+  - name: Build guacamole-server from source
+    shell: '{{ item }}'
+    args:
+      chdir: /tmp/guacamole-server-{{ GUACAMOLE_VERSION }}
+      creates: /usr/local/sbin/guacd
+    with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
+  - name: Run ldconfig so that guacd can run correctly
+    shell: ldconfig
+  # - name: Download guacamole-auth-hmac source
+  #   git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/davad/guacamole-auth-hmac.git force=yes
+  - name: Download guacamole-auth-hmac source
+    git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
+  - name: Build the jar
+    shell: mvn package chdir=/tmp/guacamole-auth-hmac
+  - name: Make '{{ GUACAMOLE_HOME }}' directory
+    file: path='{{ GUACAMOLE_HOME }}' state=directory
+  - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
+    file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
+  - name: Copy over guacamole-{{ GUACAMOLE_VERSION }}.war
+    copy: src="files/guacamole-{{ GUACAMOLE_VERSION }}.war" dest=/var/lib/{{ TOMCAT_VERSION }}/webapps/guacamole.war
+  - name: Move guacamole-auth-hmac.jar to extensions directory
+    copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.2.jar" dest='{{ GUACAMOLE_HOME }}/extensions/guacamole-auth-hmac.jar' remote_src=yes
+
+- tags: template
+  block:
+  - name: Move gen_guac_url.py to '{{ GUACAMOLE_HOME }}'
+    template: src=gen_guac_url.py.j2 dest="{{ GUACAMOLE_HOME }}/gen_guac_url.py"
+  - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
+    template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
+
+- name: Cleanup temp files
+  file: path={{ item }} state=absent
+  with_items:
+    - /tmp/guacamole-server-{{ GUACAMOLE_VERSION }}.tar.gz
+    - /tmp/guacamole-server-{{ GUACAMOLE_VERSION }}
+    - /tmp/guacamole-auth-hmac
+  ignore_errors: yes
+  tags: cleanup
+
+- name: restart services (tomcat,guacd)
+  service: name={{ item }} state=restarted
+  with_items: [ '{{ TOMCAT_VERSION }}', guacd ]
+  ignore_errors: yes
+  tags: restart

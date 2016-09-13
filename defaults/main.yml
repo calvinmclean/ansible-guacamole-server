@@ -1,0 +1,14 @@
+---
+
+GUACD_PORT: 4822
+GUACAMOLE_HOME: /usr/share/{{ TOMCAT_VERSION }}/.guacamole
+GUACAMOLE_VERSION: 0.9.9
+
+hmac_secret: secret
+addrs:
+  - 255.0.0.0
+  - 255.0.0.1
+  - 255.0.0.2
+protocols:
+  - vnc
+  - ssh
