@@ -1,7 +1,5 @@
 ---
 
-TOMCAT_VERSION: tomcat7
-
 PACKAGES:
 # Guacamole dependencies
   - libcairo2-dev
@@ -12,7 +10,7 @@ PACKAGES:
   - libssl-dev
   - libossp-uuid-dev
 # Other
-  - "{{ TOMCAT_VERSION }}"
+  - tomcat7
   - software-properties-common
   - default-jdk
   - git
