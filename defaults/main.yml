@@ -6,10 +6,3 @@ server_addr: localhost:8080/guacamole
 
 hmac_secret: secret
 hmac_age_limit: 600000
-
-addrs:
-  - localhost
-
-protocols:
-  - vnc
-  - ssh
