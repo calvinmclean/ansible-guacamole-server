@@ -10,6 +10,7 @@ Current tomcat version: **tomcat7** (Ubuntu)
 |-------------------------|----------|---------|---------------------------|------------------------------------------|
 | GUACD_PORT              | yes      | 4822    | any port                  | use in `guacamole.properties` template   |
 | GUACAMOLE_HOME          | yes      | /usr/share/tomcat7/.guacamole |                | [Read this if you want to move `GUACAMOLE_HOME`](http://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html)|
+| server_addr             | yes      | localhost:8080/guacamole  | hostname of the server | This is used to get the beginning of the URL by the URL generator|
 | addrs                   | yes      | localhost| any IPs you want to connect to| used in `gen_guac_url.py` template|
 | protocols               | yes      | vnc,ssh | vnc, ssh                  | used in `gen_guac_url.py` template to specify the connection types we want for each addr|
 | hmac_secret             | yes      | secret  | any string                | HMAC auth relies on this, so make it good!                         |

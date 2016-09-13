@@ -3,11 +3,13 @@
 GUACD_PORT: 4822
 GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
 
-hmac_secret: secret
-hmac_age_limit: 600000
+hmac_secret:
+hmac_age_limit:
+server_addr:
 
 addrs:
-  - localhost
+  -
+  -
 
 protocols:
   - vnc
