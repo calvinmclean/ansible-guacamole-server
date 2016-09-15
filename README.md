@@ -21,7 +21,7 @@ Current tomcat version: **tomcat7** (Ubuntu)
 
 `http://localhost:8080/guacamole/#/c/client/4415?timestamp=1473789652637&guac.port=5901&guac.password=PASSWORD&guac.protocol=vnc&signature=f5bmkMtP4x6T0yODsptHLyOf8xI%2Bth%2FNs2sTa83QCWY%3D&guac.hostname=HOSTNAME&id=c%2F4415`
 
-###### URL creation
+##### URL creation
 The URL generator concatenates the secret, the timestamp, and the protocol and hashes this string with sha256. This is then encoded with base64 to produce the 'signature' part of the URL.
 
 The links are created with a timestamp of their creation times, and the server has an age-limit property so the links expire. This requires generation of new links, or setting age-limit to unlimited.

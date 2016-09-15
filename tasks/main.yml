@@ -56,6 +56,6 @@
 
 - name: restart services (tomcat,guacd)
   service: name={{ item }} state=restarted
-  with_items: [ 'tomcat7', guacd ]
+  with_items: [ tomcat7, guacd ]
   ignore_errors: yes
   tags: restart
