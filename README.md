@@ -36,15 +36,6 @@ SSH can be authenticated using a keypair. The server would have its RSA private 
 #### VNC
 VNC is authenticated using the VNC password that is set during VNC server setup on the client VM.
 
-The problem with this is that, as you can see in the link above, the password is visible. Although knowing the password is useless as long as the user cannot create a valid signature for other connections, it is still not good to have it show for all users. My proposed fix for this is to either:
-
-1. Use a random password for each new VM. This password will have to be remembered by the server so it can be reused on creation of new links.
-  - Implementation: when setting up the VMs, add a task for the Ansible role to send this password to the server's database, then the server will get the password by querying the client's ID when creating the link.
-  - Problem: managing the database will be difficult because the passwords should be removed when the client instance is deleted. Also, it is difficult to query by connection IDs, especially if DB cleaning is flawed and the DB gets cluttered.
-2. Use a password for each user. These passwords will be remembered by the server and used for creating the new links.
-  - Implementation: when setting up VMs, add a task to the Ansible role to query the server's database to receive the user's VNC password.
-  - Problem: user passwords should be changed out after some time, but this is easy to implement.
-
 Guacamole does not currently support encrypted connections from RealVNC because it is a non-standard VNC feature. Guacamole developers want to add this feature, but there is no expected release, and it will probably be a while.
 
 ---
