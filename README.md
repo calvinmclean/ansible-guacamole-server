@@ -28,6 +28,8 @@ The links are created with a timestamp of their creation times, and the server h
 
 This authentication method is useful in this application of Guacamole because it does not require additional user accounts, and the link takes the user directly to the connection they need.
 
+The python file in templates is used to create URLs and can be used like this: `python gen_guac_url.py [HOSTNAME] [VNCPASS] [PROTOCOL]`
+
 #### SSH
 SSH is authenticated using the users' Unix usernames and passwords as they would normally.
 
@@ -48,9 +50,6 @@ Guacamole does not currently support encrypted connections from RealVNC because 
 ```
 ---
 ### Issue & Roadmap
-- Depending on which method of VNC login will be used, I will have to add some stuff. For both, I will need to set up a database in this role.
-  - Option 1: add a task to get connection password from the database and add new password for new connections
-  - Option 2: add a task to get user VNC passwords from the database
 - Where does the generation of new links occur? How will they be updated on the Atmosphere UI?
   - I think that when a new VM is launched, it should have the `gen_guac_url.py` itself, since generating a link does not require anything from the server. However, this leaves the HMAC secret vulnerable.
 - I will likely need a separate role for adding connections to the server, since it doesn't need to be configured each time, or use `--tags=vars,template` with this role.
