@@ -50,6 +50,5 @@ Guacamole does not currently support encrypted connections from RealVNC because 
 ```
 ---
 ### Issue & Roadmap
-- Where does the generation of new links occur? How will they be updated on the Atmosphere UI?
-  - I think that when a new VM is launched, it should have the `gen_guac_url.py` itself, since generating a link does not require anything from the server. However, this leaves the HMAC secret vulnerable.
-- I will likely need a separate role for adding connections to the server, since it doesn't need to be configured each time, or use `--tags=vars,template` with this role.
+- Need to use POST for the connections rather than GET.
+- After I'm done with guacamole-auth-hmac, I will change the task to use a tar.gz rather than git clone every time
