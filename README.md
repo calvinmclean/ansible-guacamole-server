@@ -11,24 +11,15 @@ Current tomcat version: **tomcat7** (Ubuntu)
 | GUACD_PORT              | yes      | 4822    | any port                  | use in `guacamole.properties` template   |
 | GUACAMOLE_HOME          | yes      | /usr/share/tomcat7/.guacamole |                | [Read this if you want to move `GUACAMOLE_HOME`](http://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html)|
 | server_addr             | yes      | localhost:8080/guacamole  | hostname of the server | This is used to get the beginning of the URL by the URL generator|
-| addrs                   | yes      | localhost| any IPs you want to connect to| used in `gen_guac_url.py` template|
-| protocols               | yes      | vnc,ssh | vnc, ssh                  | used in `gen_guac_url.py` template to specify the connection types we want for each addr|
 | hmac_secret             | yes      | secret  | any string                | HMAC auth relies on this, so make it good!                         |
 | hmac_age_limit          | yes      | 600,000 seconds | time in seconds   | used in `gucamole.properties` template to set how long a generated URL is valid|
 ---
 ### Authentication
-[Guacamole authentication is performed with HMAC](https://github.com/calvinmclean/guacamole-auth-hmac). This allows connections to be accessed without user accounts. The code for HMAC includes a python script to create the links that will look like this:
+[Guacamole authentication is performed with HMAC](https://github.com/calvinmclean/guacamole-auth-hmac). This allows connections to be accessed without user accounts. The code for HMAC includes form.php that will send the authentication information as a POST request and redirect the user to their connection with the returned authToken. The URL looks like:
 
-`http://localhost:8080/guacamole/#/c/client/4415?timestamp=1473789652637&guac.port=5901&guac.password=PASSWORD&guac.protocol=vnc&signature=f5bmkMtP4x6T0yODsptHLyOf8xI%2Bth%2FNs2sTa83QCWY%3D&guac.hostname=HOSTNAME&id=c%2F4415`
+`http://localhost:8888/guacamole/#/client/ZjA4YzRlLWM3MWUtNDE1OC05MTNkLTlkYjRlNzEyYmJkNwBjAGhtYWM=?token=bd786cd40e307d5c5b14bde0dc5fffcd9f797cfb64ae0c1947c247054d80efac`
 
-##### URL creation
-The URL generator concatenates the secret, the timestamp, and the protocol and hashes this string with sha256. This is then encoded with base64 to produce the 'signature' part of the URL.
-
-The links are created with a timestamp of their creation times, and the server has an age-limit property so the links expire. This requires generation of new links, or setting age-limit to unlimited.
-
-This authentication method is useful in this application of Guacamole because it does not require additional user accounts, and the link takes the user directly to the connection they need.
-
-The python file in templates is used to create URLs and can be used like this: `python gen_guac_url.py [HOSTNAME] [VNCPASS] [PROTOCOL]`
+Read more about this in **[HMAC-README.md](https://gitlab.cyverse.org/calvinmclean/Guacamole-READMEs/blob/master/HMAC-README.md)**
 
 #### SSH
 SSH is authenticated using the users' Unix usernames and passwords as they would normally.
@@ -49,6 +40,3 @@ Guacamole does not currently support encrypted connections from RealVNC because 
     - ansible-guacamole-server
 ```
 ---
-### Issue & Roadmap
-- Need to use POST for the connections rather than GET.
-- After I'm done with guacamole-auth-hmac, I will change the task to use a tar.gz rather than git clone every time
