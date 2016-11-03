@@ -23,8 +23,6 @@
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
   - name: Run ldconfig so that guacd can run correctly
     shell: ldconfig
-  # - name: Download guacamole-auth-hmac source
-  #   git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/davad/guacamole-auth-hmac.git force=yes
   - name: Download guacamole-auth-hmac source
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
   - name: Build the jar
@@ -36,12 +34,10 @@
   - name: Copy over guacamole-0.9.9.war
     copy: src="files/guacamole-0.9.9.war" dest=/var/lib/tomcat7/webapps/guacamole.war
   - name: Move guacamole-auth-hmac.jar to extensions directory
-    copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.2.jar" dest='{{ GUACAMOLE_HOME }}/extensions/guacamole-auth-hmac.jar' remote_src=yes
+    copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/guacamole-auth-hmac.jar' remote_src=yes
 
 - tags: template
   block:
-  - name: Move gen_guac_url.py to '{{ GUACAMOLE_HOME }}'
-    template: src=gen_guac_url.py.j2 dest="{{ GUACAMOLE_HOME }}/gen_guac_url.py"
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
 
