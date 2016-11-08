@@ -40,36 +40,18 @@
   block:
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
-  - name: Add CorsFilter to tomcat7's guacamole directory /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
+  - name: Add CorsFilter to Tomcat7
     blockinfile:
-      dest: "/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml"
+      dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
       insertafter: "<!-- Basic config -->"
       state: present
-      block: |
-        <filter>
-          <filter-name>CorsFilter</filter-name>
-          <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
-          <init-param>
-              <param-name>cors.allowed.origins</param-name>
-              <param-value>*</param-value>
-          </init-param>
-          <init-param>
-              <param-name>cors.allowed.methods</param-name>
-              <param-value>GET,POST,HEAD,OPTIONS,OPTIONS,PUT</param-value>
-          </init-param>
-          <init-param>
-              <param-name>cors.allowed.headers</param-name>
-              <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
-          </init-param>
-          <init-param>
-              <param-name>cors.exposed.headers</param-name>
-              <param-value>Access-Control-Allow-Origin,Access-Control-Allow-Credentials</param-value>
-          </init-param>
-        </filter>
-        <filter-mapping>
-          <filter-name>CorsFilter</filter-name>
-          <url-pattern>/*</url-pattern>
-        </filter-mapping>
+      block: "{{ cors_filter }}"
+  - name: Set Tomcat7 port
+    lineinfile:
+      dest: /var/lib/tomcat7/conf/server.xml
+      state: present
+      regexp: <Connector port="8080" protocol="HTTP/1.1"
+      line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
 
 - name: Cleanup temp files
   file: path={{ item }} state=absent
