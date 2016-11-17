@@ -42,6 +42,9 @@
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
   - name: Restart Tomcat7 so that I can access its files
     service: name=tomcat7 state=restarted
+
+- tags: configuration
+  block:
   - name: Add CorsFilter to Tomcat7
     blockinfile:
       dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
@@ -54,15 +57,17 @@
       state: present
       regexp: <Connector port="8080" protocol="HTTP/1.1"
       line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
+  - name: Open Tomcat7 port
+    ufw: rule=allow port="{{ tomcat_port }}"
 
-- name: Cleanup temp files
-  file: path={{ item }} state=absent
-  with_items:
-    - /tmp/guacamole-server.tar.gz
-    - /tmp/guacamole-server-{{ guacamole_version }}
-    - /tmp/guacamole-auth-hmac
-  ignore_errors: yes
-  tags: cleanup
+  - name: Cleanup temp files
+    file: path={{ item }} state=absent
+    with_items:
+      - /tmp/guacamole-server.tar.gz
+      - /tmp/guacamole-server-{{ guacamole_version }}
+      - /tmp/guacamole-auth-hmac
+    ignore_errors: yes
+    tags: cleanup
 
 - name: restart services (tomcat,guacd)
   service: name={{ item }} state=restarted enabled=yes
