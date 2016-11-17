@@ -2,7 +2,37 @@
 
 GUACD_PORT: 4822
 GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
-server_addr: localhost:8080/guacamole
+guacamole_version: 0.9.9
+server_addr: localhost
+tomcat_port: 8080
 
 hmac_secret: secret
 hmac_age_limit: 600000
+
+allowed_origins: "*"
+
+cors_filter: |2
+      <filter>
+        <filter-name>CorsFilter</filter-name>
+        <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
+        <init-param>
+            <param-name>cors.allowed.origins</param-name>
+            <param-value>{{ allowed_origins }}</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.allowed.methods</param-name>
+            <param-value>GET,POST,HEAD,OPTIONS,OPTIONS,PUT</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.allowed.headers</param-name>
+            <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.exposed.headers</param-name>
+            <param-value>Access-Control-Allow-Origin,Access-Control-Allow-Credentials</param-value>
+        </init-param>
+      </filter>
+      <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>{{ allowed_origins }}</url-pattern>
+      </filter-mapping>

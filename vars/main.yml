@@ -1,7 +1,0 @@
----
-
-GUACD_PORT: 4822
-GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
-server_addr: localhost:8080/guacamole
-hmac_secret: secret
-hmac_age_limit: 60000
