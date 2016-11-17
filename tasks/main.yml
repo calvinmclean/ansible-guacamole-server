@@ -12,7 +12,7 @@
   - name: install libvncserver
     package: name=libvncserver-dev state=latest
   - name: Download Guacamole server
-    get_url: url=http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-{{ guacamole_version }}.tar.gz dest=/tmp/guacamole-server.tar.gz
+    get_url: url=http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-{{ guacamole_version }}.tar.gz dest=/tmp/guacamole-server.tar.gz timeout=30
   - name: Extract the guacamole-server source
     unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-{{ guacamole_version }}
   - name: Build guacamole-server from source
@@ -23,16 +23,16 @@
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
   - name: Run ldconfig so that guacd can run correctly
     shell: ldconfig
-  - name: Download guacamole-auth-hmac source
-    git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
-  - name: Build the jar
-    shell: mvn package chdir=/tmp/guacamole-auth-hmac
   - name: Make GUACAMOLE_HOME directory
     file: path='{{ GUACAMOLE_HOME }}' state=directory
   - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
     file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
   - name: Download Guacamole webapp to destination directory
-    get_url: url=http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-{{ guacamole_version }}.war dest=/var/lib/tomcat7/webapps/guacamole.war
+    get_url: url=http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-{{ guacamole_version }}.war dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
+  - name: Download guacamole-auth-hmac source
+    git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
+  - name: Build the jar
+    shell: mvn package chdir=/tmp/guacamole-auth-hmac
   - name: Move guacamole-auth-hmac.jar to extensions directory
     copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/hmac.jar' remote_src=yes
 
@@ -40,6 +40,8 @@
   block:
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
+  - name: Restart Tomcat7 so that I can access its files
+    service: name=tomcat7 state=restarted
   - name: Add CorsFilter to Tomcat7
     blockinfile:
       dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml

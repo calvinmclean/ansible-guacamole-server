@@ -1,5 +1,7 @@
 # ansible-guacamole-server
 
+*dev branch*: [![Build Status](https://travis-ci.org/calvinmclean/ansible-guacamole-server.svg?branch=dev)](https://travis-ci.org/calvinmclean/ansible-guacamole-server)
+
 Current guacamole version: **0.9.9**
 
 Current tomcat version: **tomcat7** (Ubuntu)
