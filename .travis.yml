@@ -18,7 +18,7 @@ env:
     TEST_DIR: /etc/ansible/roles/ansible-guacamole-server/tests
 
 before_install:
-  - 'sudo docker run --detach --interactive --tty --name=test_dummy --volume="$PWD":"$ROLE_DIR":rw cyverse/ansible-test:latest-"$distribution"-"$version" bash'
+  - 'sudo docker run --cap-add SYS_PTRACE --detach --interactive --tty --name=test_dummy --volume="$PWD":"$ROLE_DIR":rw cyverse/ansible-test:latest-"$distribution"-"$version" bash'
 
 script:
   # 1. Syntax check
