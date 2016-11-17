@@ -15,3 +15,4 @@ PACKAGES:
   - default-jdk
   - git
   - maven
+  - ufw
