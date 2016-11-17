@@ -27,15 +27,19 @@ script:
   # 2. Run playbook to execute role
   - 'sudo docker exec test_dummy ansible-playbook --connection=local --inventory-file="$TEST_DIR"/inventory "$TEST_DIR"/test.yml'
 
-  # 3. HERE, WRITE SOME TESTS to verify that your role has produced the desired
-  # effect on the target system. Your tests should be bash commands that
-  # complete with an exit status of 0 for a pass, and non-zero for a failure.
-  #
-  # This example tests whether 'hello' exists in /tmp/hello.txt.
-  # - >
-  #   sudo docker exec test_dummy bash -c cat /tmp/hello.txt | grep -q 'hello'
-  #   && (echo 'Test for role result: pass' && exit 0)
-  #   || (echo 'Test for role result: fail' && exit 1)
+  # 3. Tests!
+
+  # Test whether Tomcat CorsFilter was added
+  - >
+    sudo docker exec test_dummy bash -c cat /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml | grep -q '<filter-class>org.apache.catalina.filters.CorsFilter</filter-class>'
+    && (echo 'Test for role result: pass' && exit 0)
+    || (echo 'Test for role result: fail' && exit 1)
+
+  # Test whether Tomcat port specification worked
+  - >
+    sudo docker exec test_dummy bash -c cat /var/lib/tomcat7/conf/server.xml | grep -q '<Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
+    && (echo 'Test for role result: pass' && exit 0)
+    || (echo 'Test for role result: fail' && exit 1)
 
   # 4. Idempotence test (run playbook again to confirm nothing changes)
   # - >
