@@ -11,7 +11,7 @@ hmac_age_limit: 600000
 
 allowed_origins: "*"
 
-cors_filter: |4
+cors_filter: |2
       <filter>
         <filter-name>CorsFilter</filter-name>
         <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>

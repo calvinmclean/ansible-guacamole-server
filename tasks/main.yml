@@ -12,13 +12,13 @@
   - name: install libvncserver
     package: name=libvncserver-dev state=latest
   - name: Download Guacamole server
-    get_url: url=http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-{{ guacamole_version }}.tar.gz/download dest=/tmp/guacamole-server.tar.gz
+    get_url: url=http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-{{ guacamole_version }}.tar.gz dest=/tmp/guacamole-server.tar.gz
   - name: Extract the guacamole-server source
-    unarchive: src="/tmp/guacamole-server.tar.gz" copy=no dest="/tmp/guacamole-server"
+    unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-{{ guacamole_version }}
   - name: Build guacamole-server from source
     shell: '{{ item }}'
     args:
-      chdir: /tmp/guacamole-server
+      chdir: /tmp/guacamole-server-{{ guacamole_version }}
       creates: /usr/local/sbin/guacd
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
   - name: Run ldconfig so that guacd can run correctly
@@ -32,7 +32,7 @@
   - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
     file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
   - name: Download Guacamole webapp to destination directory
-    get_url: url=http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-{{ guacamole_version }}.war/download dest=/var/lib/tomcat7/webapps/guacamole.war
+    get_url: url=http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-{{ guacamole_version }}.war dest=/var/lib/tomcat7/webapps/guacamole.war
   - name: Move guacamole-auth-hmac.jar to extensions directory
     copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/hmac.jar' remote_src=yes
 
@@ -57,13 +57,13 @@
   file: path={{ item }} state=absent
   with_items:
     - /tmp/guacamole-server.tar.gz
-    - /tmp/guacamole-server
+    - /tmp/guacamole-server-{{ guacamole_version }}
     - /tmp/guacamole-auth-hmac
   ignore_errors: yes
   tags: cleanup
 
 - name: restart services (tomcat,guacd)
-  service: name={{ item }} state=restarted
+  service: name={{ item }} state=restarted enabled=yes
   with_items: [ tomcat7, guacd ]
   ignore_errors: yes
   tags: restart
