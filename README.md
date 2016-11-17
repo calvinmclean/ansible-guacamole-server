@@ -21,7 +21,7 @@ Current tomcat version: **tomcat7** (Ubuntu)
 
 `http://localhost:8888/guacamole/#/client/ZjA4YzRlLWM3MWUtNDE1OC05MTNkLTlkYjRlNzEyYmJkNwBjAGhtYWM=?token=bd786cd40e307d5c5b14bde0dc5fffcd9f797cfb64ae0c1947c247054d80efac`
 
-Read more about this in **[HMAC-README.md](https://gitlab.cyverse.org/calvinmclean/Guacamole-READMEs/blob/master/HMAC-README.md)**
+Read more about this in **[HMAC-README.md](https://github.com/calvinmclean/guacamole-auth-hmac)**
 
 #### SSH
 SSH is authenticated using the users' Unix usernames and passwords as they would normally.
