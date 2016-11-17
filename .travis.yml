@@ -31,13 +31,13 @@ script:
 
   # Test whether Tomcat CorsFilter was added
   - >
-    sudo docker exec -d test_dummy "cat /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml | grep -q '<filter-class>org.apache.catalina.filters.CorsFilter</filter-class>'"
+    sudo docker exec test_dummy /bin/bash cat /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml | grep -q '<filter-class>org.apache.catalina.filters.CorsFilter</filter-class>'
     && (echo 'Test for role result: pass' && exit 0)
     || (echo 'Test for role result: fail' && exit 1)
 
   # Test whether Tomcat port specification worked
   - >
-    sudo docker exec -d test_dummy cat /var/lib/tomcat7/conf/server.xml | grep -q '<Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
+    sudo docker exec test_dummy /bin/bash cat /var/lib/tomcat7/conf/server.xml | grep -q '<Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
     && (echo 'Test for role result: pass' && exit 0)
     || (echo 'Test for role result: fail' && exit 1)
 
