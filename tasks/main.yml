@@ -42,6 +42,7 @@
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
   - name: Restart Tomcat7 so that I can access its files
     service: name=tomcat7 state=restarted
+    ignore_errors: yes
   - name: Add CorsFilter to Tomcat7
     blockinfile:
       dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
