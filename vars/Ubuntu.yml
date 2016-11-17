@@ -14,4 +14,4 @@ PACKAGES:
   - software-properties-common
   - default-jdk
   - git
-  - maven2
+  - maven

@@ -1,0 +1,7 @@
+---
+
+- name: TEST !!! Playbook to install Guacamole HTML5 VNC on a server
+  hosts: localhost
+  remote_user: root
+  roles:
+    - ansible-guacamole-server
