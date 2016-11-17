@@ -11,14 +11,14 @@
     with_items: '{{ PACKAGES }}'
   - name: install libvncserver
     package: name=libvncserver-dev state=latest
-  - name: Copy over guacamole-server source
-    copy: src="files/guacamole-server-0.9.9.tar.gz" dest=/tmp/
+  - name: Download Guacamole server
+    get_url: url=http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-{{ guacamole_version }}.tar.gz/download dest=/tmp/guacamole-server.tar.gz
   - name: Extract the guacamole-server source
-    unarchive: src="/tmp/guacamole-server-0.9.9.tar.gz" copy=no dest="/tmp/"
+    unarchive: src="/tmp/guacamole-server.tar.gz" copy=no dest="/tmp/guacamole-server"
   - name: Build guacamole-server from source
     shell: '{{ item }}'
     args:
-      chdir: /tmp/guacamole-server-0.9.9
+      chdir: /tmp/guacamole-server
       creates: /usr/local/sbin/guacd
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
   - name: Run ldconfig so that guacd can run correctly
@@ -27,14 +27,14 @@
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
   - name: Build the jar
     shell: mvn package chdir=/tmp/guacamole-auth-hmac
-  - name: Make '{{ GUACAMOLE_HOME }}' directory
+  - name: Make GUACAMOLE_HOME directory
     file: path='{{ GUACAMOLE_HOME }}' state=directory
   - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
     file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
-  - name: Copy over guacamole-0.9.9.war
-    copy: src="files/guacamole-0.9.9.war" dest=/var/lib/tomcat7/webapps/guacamole.war
+  - name: Download Guacamole webapp to destination directory
+    get_url: url=http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-{{ guacamole_version }}.war/download dest=/var/lib/tomcat7/webapps/guacamole.war
   - name: Move guacamole-auth-hmac.jar to extensions directory
-    copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/guacamole-auth-hmac.jar' remote_src=yes
+    copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/hmac.jar' remote_src=yes
 
 - tags: template
   block:
@@ -56,8 +56,8 @@
 - name: Cleanup temp files
   file: path={{ item }} state=absent
   with_items:
-    - /tmp/guacamole-server-0.9.9.tar.gz
-    - /tmp/guacamole-server-0.9.9
+    - /tmp/guacamole-server.tar.gz
+    - /tmp/guacamole-server
     - /tmp/guacamole-auth-hmac
   ignore_errors: yes
   tags: cleanup
