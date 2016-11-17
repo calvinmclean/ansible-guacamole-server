@@ -8,10 +8,10 @@ services:
   - docker
 
 env:
-  # - distribution: ubuntu
-  #   version: 16.04
-  #   ROLE_DIR: /etc/ansible/roles/ansible-guacamole-server
-  #   TEST_DIR: /etc/ansible/roles/ansible-guacamole-server/tests
+  - distribution: ubuntu
+    version: 16.04
+    ROLE_DIR: /etc/ansible/roles/ansible-guacamole-server
+    TEST_DIR: /etc/ansible/roles/ansible-guacamole-server/tests
   - distribution: ubuntu
     version: 14.04
     ROLE_DIR: /etc/ansible/roles/ansible-guacamole-server
