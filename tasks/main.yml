@@ -60,14 +60,14 @@
   - name: Open Tomcat7 port
     ufw: rule=allow port="{{ tomcat_port }}"
 
-  - name: Cleanup temp files
-    file: path={{ item }} state=absent
-    with_items:
-      - /tmp/guacamole-server.tar.gz
-      - /tmp/guacamole-server-{{ guacamole_version }}
-      - /tmp/guacamole-auth-hmac
-    ignore_errors: yes
-    tags: cleanup
+- name: Cleanup temp files
+  file: path={{ item }} state=absent
+  with_items:
+    - /tmp/guacamole-server.tar.gz
+    - /tmp/guacamole-server-{{ guacamole_version }}
+    - /tmp/guacamole-auth-hmac
+  ignore_errors: yes
+  tags: cleanup
 
 - name: restart services (tomcat,guacd)
   service: name={{ item }} state=restarted enabled=yes
