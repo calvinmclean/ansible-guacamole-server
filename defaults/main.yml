@@ -6,6 +6,9 @@ guacamole_version: 0.9.9
 server_addr: localhost
 tomcat_port: 8080
 
+server_dl_url: http://downloads.sourceforge.net/project/guacamole/current/source/guacamole-server-0.9.9.tar.gz?r=http%3A%2F%2Fguacamole.incubator.apache.org%2Freleases%2F0.9.9%2F&ts=1479840694&use_mirror=freefr
+war_dl_url: http://downloads.sourceforge.net/project/guacamole/current/binary/guacamole-0.9.9.war?r=http%3A%2F%2Fguacamole.incubator.apache.org%2Freleases%2F0.9.9%2F&ts=1479840511&use_mirror=kent
+
 hmac_secret: secret
 hmac_age_limit: 600000
 
