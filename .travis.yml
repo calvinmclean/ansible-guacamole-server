@@ -37,7 +37,7 @@ script:
 
   # # Test whether Tomcat port specification worked
   - >
-    sudo docker exec test_dummy /bin/cat /var/lib/tomcat7/conf/server.xml | grep -q '<Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
+    sudo docker exec test_dummy /bin/cat /var/lib/tomcat7/conf/server.xml | grep -q '<Connector port="8080" protocol="HTTP/1.1"'
     && (echo 'Test for role result: pass' && exit 0)
     || (echo 'Test for role result: fail' && exit 1)
 
