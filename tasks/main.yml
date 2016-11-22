@@ -7,12 +7,16 @@
 - tags: install
   block:
   - name: Install dependencies for guacamole
-    package: name={{ item }} state=latest
+    package: name={{ item }} state=present
     with_items: '{{ PACKAGES }}'
   - name: install libvncserver
-    package: name=libvncserver-dev state=latest
+    package: name=libvncserver-dev state=present
   - name: Download Guacamole server
     get_url: url={{ server_dl_url }} dest=/tmp/guacamole-server.tar.gz timeout=30
+    register: result
+    until: result.changed == true
+    retries: 5
+    delay: 5
   - name: Extract the guacamole-server source
     unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-{{ guacamole_version }}
   - name: Build guacamole-server from source
@@ -21,19 +25,25 @@
       chdir: /tmp/guacamole-server-{{ guacamole_version }}
       creates: /usr/local/sbin/guacd
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
-  - name: Run ldconfig so that guacd can run correctly
+    register: guacd_build
+  - name: Run ldconfig if guacd was freshly installed
     shell: ldconfig
+    when: guacd_build.changed == true
   - name: Make GUACAMOLE_HOME directory
     file: path='{{ GUACAMOLE_HOME }}' state=directory
   - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
     file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
   - name: Download Guacamole webapp to destination directory
     get_url: url={{ war_dl_url }} dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
+    register: result
+    until: result.changed == true
+    retries: 5
+    delay: 5
   - name: Download guacamole-auth-hmac source
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
   - name: Build the jar
     shell: mvn package chdir=/tmp/guacamole-auth-hmac
-  - name: Move guacamole-auth-hmac.jar to extensions directory
+  - name: Move hmac.jar to extensions directory
     copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/hmac.jar' remote_src=yes
 
 - tags: template
@@ -42,6 +52,7 @@
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
   - name: Restart Tomcat7 so that I can access its files
     service: name=tomcat7 state=restarted
+    changed_when: False
 
 - tags: configuration
   block:
@@ -74,3 +85,4 @@
   with_items: [ tomcat7, guacd ]
   ignore_errors: yes
   tags: restart
+  changed_when: False
