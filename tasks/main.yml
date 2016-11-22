@@ -12,7 +12,7 @@
   - name: install libvncserver
     package: name=libvncserver-dev state=latest
   - name: Download Guacamole server
-    get_url: url=http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-{{ guacamole_version }}.tar.gz dest=/tmp/guacamole-server.tar.gz timeout=30
+    get_url: url={{ server_dl_url }} dest=/tmp/guacamole-server.tar.gz timeout=30
   - name: Extract the guacamole-server source
     unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-{{ guacamole_version }}
   - name: Build guacamole-server from source
@@ -28,7 +28,7 @@
   - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
     file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
   - name: Download Guacamole webapp to destination directory
-    get_url: url=http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-{{ guacamole_version }}.war dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
+    get_url: url={{ war_dl_url }} dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
   - name: Download guacamole-auth-hmac source
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
   - name: Build the jar
