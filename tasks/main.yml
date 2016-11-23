@@ -9,16 +9,20 @@
   - name: Install dependencies for guacamole
     package: name={{ item }} state=present
     with_items: '{{ PACKAGES }}'
+
   - name: install libvncserver
     package: name=libvncserver-dev state=present
+
   - name: Download Guacamole server
     get_url: url={{ server_dl_url }} dest=/tmp/guacamole-server.tar.gz timeout=30
     register: result
     until: result.changed == true
     retries: 5
     delay: 5
+
   - name: Extract the guacamole-server source
     unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-{{ guacamole_version }}
+
   - name: Build guacamole-server from source
     shell: '{{ item }}'
     args:
@@ -26,23 +30,30 @@
       creates: /usr/local/sbin/guacd
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
     register: guacd_build
+
   - name: Run ldconfig if guacd was freshly installed
     shell: ldconfig
     when: guacd_build.changed == true
+
   - name: Make GUACAMOLE_HOME directory
     file: path='{{ GUACAMOLE_HOME }}' state=directory
+
   - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
     file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
+
   - name: Download Guacamole webapp to destination directory
     get_url: url={{ war_dl_url }} dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
     register: result
     until: result.changed == true
     retries: 5
     delay: 5
+
   - name: Download guacamole-auth-hmac source
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
+
   - name: Build the jar
     shell: mvn package chdir=/tmp/guacamole-auth-hmac
+
   - name: Move hmac.jar to extensions directory
     copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/hmac.jar' remote_src=yes
 
@@ -50,6 +61,13 @@
   block:
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
+
+  - name: Add nginx reverse proxy config to sites-available
+    template: src="nginx-guacamole.j2" dest="/etc/nginx/sites-available/nginx-guacamole"
+
+  - name: Create symbolic link for nginx config to sites-enabled
+    file: src="/etc/nginx/sites-available/nginx-guacamole" dest="/etc/nginx/sites-enabled/nginx-guacamole" state=link
+
   - name: Restart Tomcat7 so that I can access its files
     service: name=tomcat7 state=restarted
     changed_when: False
@@ -62,14 +80,16 @@
       insertafter: "<!-- Basic config -->"
       state: present
       block: "{{ cors_filter }}"
+
   - name: Set Tomcat7 port
     lineinfile:
       dest: /var/lib/tomcat7/conf/server.xml
       state: present
       regexp: <Connector port="8080" protocol="HTTP/1.1"
       line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
+
   - name: Open Tomcat7 port
-    ufw: rule=allow port="{{ tomcat_port }}"
+    ufw: rule=allow port="{{ tomcat_port }}" state=enabled
 
 - name: Cleanup temp files
   file: path={{ item }} state=absent

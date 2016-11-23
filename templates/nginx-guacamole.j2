@@ -1,0 +1,24 @@
+## location: /etc/nginx/sites-available
+## link to sites-enabled: ln -s /etc/nginx/sites-enabled/nginx-guacamole /etc/nginx/sites-available/nginx-guacamole
+
+server {
+  listen 80;
+
+  root /var/lib/tomcat7/webapps/guacamole;
+
+  server_name {{ server_addr }};
+
+  location / {
+    try_files $uri $uri/ =404;
+  }
+
+  location /guacamole/ {
+    proxy_pass http://localhost:8080/guacamole/;
+    proxy_buffering off;
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $http_connection;
+    access_log off;
+  }
+}
