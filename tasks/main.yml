@@ -16,7 +16,7 @@
   - name: Download Guacamole server
     get_url: url={{ server_dl_url }} dest=/tmp/guacamole-server.tar.gz timeout=30
     register: result
-    until: result.msg.find("OK") == 0 || result.msg.find("file already exists") == 0
+    until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
     retries: 5
     delay: 5
     ignore_errors: yes
@@ -45,7 +45,7 @@
   - name: Download Guacamole webapp to destination directory
     get_url: url={{ war_dl_url }} dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
     register: result
-    until: result.msg.find("OK") == 0 || result.msg.find("file already exists") == 0
+    until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
     retries: 5
     delay: 5
     ignore_errors: yes
