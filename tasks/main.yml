@@ -16,9 +16,10 @@
   - name: Download Guacamole server
     get_url: url={{ server_dl_url }} dest=/tmp/guacamole-server.tar.gz timeout=30
     register: result
-    until: result.changed == true
+    until: result.msg.find("OK") == 0 || result.msg.find("file already exists") == 0
     retries: 5
     delay: 5
+    ignore_errors: yes
 
   - name: Extract the guacamole-server source
     unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-{{ guacamole_version }}
@@ -44,9 +45,10 @@
   - name: Download Guacamole webapp to destination directory
     get_url: url={{ war_dl_url }} dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
     register: result
-    until: result.changed == true
+    until: result.msg.find("OK") == 0 || result.msg.find("file already exists") == 0
     retries: 5
     delay: 5
+    ignore_errors: yes
 
   - name: Download guacamole-auth-hmac source
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
@@ -68,6 +70,12 @@
   - name: Create symbolic link for nginx config to sites-enabled
     file: src="/etc/nginx/sites-available/nginx-guacamole" dest="/etc/nginx/sites-enabled/nginx-guacamole" state=link
 
+  - name: Remove sites-enabled and sites-available 'default' conf
+    file: path="{{ item }}" state=absent
+    with_items:
+      - /etc/nginx/sites-available/deafult
+      - /etc/nginx/sites-enabled/deafult
+
   - name: Restart Tomcat7 so that I can access its files
     service: name=tomcat7 state=restarted
     changed_when: False
@@ -88,8 +96,27 @@
       regexp: <Connector port="8080" protocol="HTTP/1.1"
       line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
 
+  - name: Symbolically link /usr/share/tomcat7/.guacamole to /etc/guacamole
+    file: src=/usr/share/tomcat7/.guacamole dest=/etc/guacamole state=link
   - name: Open Tomcat7 port
     ufw: rule=allow port="{{ tomcat_port }}" state=enabled
+  - name: Open SSH port
+    ufw: rule=allow port="{{ ssh_port }}"
+
+- tags: ssl
+  block:
+  - lineinfile:
+      dest: /etc/init.d/guacd
+      regexp: getpid > /dev/null || $exec -p "$pidfile"
+      line: '    getpid > /dev/null || $exec -p "$pidfile" $sslinfo'
+      state: present
+
+  - lineinfile:
+      dest: /etc/init.d/guacd
+      insertafter: pidfile="/var/run/$prog.pid"
+      line: "sslinfo='-K /etc/guacamole/key.pem -C /etc/guacamole/cert.pem'"
+      state: present
+  when: guacd_ssl == true
 
 - name: Cleanup temp files
   file: path={{ item }} state=absent
