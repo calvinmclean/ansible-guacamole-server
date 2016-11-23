@@ -14,7 +14,7 @@ Current tomcat version: **7**
 | GUACAMOLE_HOME          | yes      | /usr/share/tomcat7/.guacamole |                | [Read this if you want to move `GUACAMOLE_HOME`](http://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html)|
 | server_addr             | yes      | localhost  | hostname of the server | used in `guacamole.properties`|
 | hmac_secret             | yes      | secret  | any string                | HMAC auth relies on this, so make it good!                         |
-| hmac_age_limit          | yes      | 600,000 seconds | time in seconds   | used in `gucamole.properties` template to set how long a generated URL is valid|
+| hmac_age_limit          | yes      | 600,000 milliseconds | time in seconds   | used in `gucamole.properties` template to set how long a generated URL is valid|
 ---
 ### Authentication
 [Guacamole authentication is performed with HMAC](https://github.com/calvinmclean/guacamole-auth-hmac). This allows connections to be accessed without user accounts. The code for HMAC includes form.php that will send the authentication information as a POST request and redirect the user to their connection with the returned authToken. The URL looks like:

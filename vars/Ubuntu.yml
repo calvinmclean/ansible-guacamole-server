@@ -16,3 +16,4 @@ PACKAGES:
   - git
   - maven
   - ufw
+  - nginx
