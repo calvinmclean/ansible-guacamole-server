@@ -100,9 +100,9 @@
   ignore_errors: yes
   tags: cleanup
 
-- name: restart services (tomcat,guacd)
+- name: restart services (tomcat,guacd,nginx,ufw)
   service: name={{ item }} state=restarted enabled=yes
-  with_items: [ tomcat7, guacd ]
+  with_items: [ tomcat7, guacd, nginx, ufw ]
   ignore_errors: yes
   tags: restart
   changed_when: False
