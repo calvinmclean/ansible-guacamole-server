@@ -73,8 +73,8 @@
   - name: Remove sites-enabled and sites-available 'default' conf
     file: path="{{ item }}" state=absent
     with_items:
-      - /etc/nginx/sites-available/deafult
-      - /etc/nginx/sites-enabled/deafult
+      - /etc/nginx/sites-available/default
+      - /etc/nginx/sites-enabled/default
 
   - name: Restart Tomcat7 so that I can access its files
     service: name=tomcat7 state=restarted
