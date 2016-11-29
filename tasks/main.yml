@@ -6,6 +6,8 @@
 
 - tags: install
   block:
+  - debug: msg="Install Guacamole server (guacd) and Guacamole client"
+
   - name: Install dependencies for guacamole
     package: name={{ item }} state=present
     with_items: '{{ PACKAGES }}'
@@ -22,12 +24,12 @@
     ignore_errors: yes
 
   - name: Extract the guacamole-server source
-    unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-{{ guacamole_version }}
+    unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-0.9.9
 
   - name: Build guacamole-server from source
     shell: '{{ item }}'
     args:
-      chdir: /tmp/guacamole-server-{{ guacamole_version }}
+      chdir: /tmp/guacamole-server-0.9.9
       creates: /usr/local/sbin/guacd
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
     register: guacd_build
@@ -39,7 +41,10 @@
   - name: Make GUACAMOLE_HOME directory
     file: path='{{ GUACAMOLE_HOME }}' state=directory
 
-  - name: Make '{{ GUACAMOLE_HOME }}'/extensions directory
+  - name: Symbolically link GUACAMOLE_HOME to /etc/guacamole
+    file: src='{{ GUACAMOLE_HOME }}' dest=/etc/guacamole state=link
+
+  - name: Make GUACAMOLE_HOME/extensions directory
     file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
 
   - name: Download Guacamole webapp to destination directory
@@ -61,6 +66,8 @@
 
 - tags: template
   block:
+  - debug: msg="Use templates to configure important files"
+
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
 
@@ -82,6 +89,8 @@
 
 - tags: configuration
   block:
+  - debug: msg="Tomcat7 and ufw configuration"
+
   - name: Add CorsFilter to Tomcat7
     blockinfile:
       dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
@@ -96,33 +105,47 @@
       regexp: <Connector port="8080" protocol="HTTP/1.1"
       line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
 
-  - name: Symbolically link /usr/share/tomcat7/.guacamole to /etc/guacamole
-    file: src=/usr/share/tomcat7/.guacamole dest=/etc/guacamole state=link
   - name: Open Tomcat7 port
     ufw: rule=allow port="{{ tomcat_port }}" state=enabled
+
   - name: Open SSH port
     ufw: rule=allow port="{{ ssh_port }}"
 
 - tags: ssl
   block:
-  - lineinfile:
+  - debug: msg="Installing SSL between guacd and the web client"
+
+  - name: Create self-signed SSL certs
+    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+    args:
+      chdir: /etc/guacamole
+      creates: [ "/etc/guacamole/key.pem", "/etc/guacamole/cert.pem" ]
+
+  - name: Modify guacd init script so it starts with SSL enabled
+    lineinfile:
       dest: /etc/init.d/guacd
-      regexp: getpid > /dev/null || $exec -p "$pidfile"
+      regexp: '^    getpid \> /dev/null \|\| \$exec -p \"\$pidfile\"'
       line: '    getpid > /dev/null || $exec -p "$pidfile" $sslinfo'
       state: present
 
   - lineinfile:
       dest: /etc/init.d/guacd
-      insertafter: pidfile="/var/run/$prog.pid"
+      insertafter: '^pidfile\=\"/var/run/\$prog.pid\"'
       line: "sslinfo='-K /etc/guacamole/key.pem -C /etc/guacamole/cert.pem'"
       state: present
+
+  - name: Open Nginx port
+    ufw: rule=allow port="{{ nginx_port }}"
+
+  - name: Close Tomcat7 port
+    ufw: rule=allow port="{{ tomcat_port }}" delete=yes
   when: guacd_ssl == true
 
 - name: Cleanup temp files
   file: path={{ item }} state=absent
   with_items:
     - /tmp/guacamole-server.tar.gz
-    - /tmp/guacamole-server-{{ guacamole_version }}
+    - /tmp/guacamole-server-0.9.9
     - /tmp/guacamole-auth-hmac
   ignore_errors: yes
   tags: cleanup
