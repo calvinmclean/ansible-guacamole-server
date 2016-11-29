@@ -3,17 +3,31 @@
 
 server {
   listen {{ nginx_port }};
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen {{ nginx_https_port }};
 
   root /var/lib/tomcat7/webapps/guacamole;
 
   server_name {{ server_addr }};
+
+  ssl_certificate           /etc/nginx/cert.pem;
+  ssl_certificate_key       /etc/nginx/key.pem;
+
+  ssl on;
+  ssl_session_cache  builtin:1000  shared:SSL:10m;
+  ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+  ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
+  ssl_prefer_server_ciphers on;
 
   location / {
     try_files $uri $uri/ =404;
   }
 
   location /guacamole/ {
-    proxy_pass http://localhost:{{ tomcat_port }}/guacamole/;
+    proxy_pass http://{{ server_addr }}:{{ tomcat_port }}/guacamole/;
     proxy_buffering off;
     proxy_http_version 1.1;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
