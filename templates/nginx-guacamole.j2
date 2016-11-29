@@ -2,7 +2,7 @@
 ## link to sites-enabled: ln -s /etc/nginx/sites-enabled/nginx-guacamole /etc/nginx/sites-available/nginx-guacamole
 
 server {
-  listen 80;
+  listen {{ nginx_port }};
 
   root /var/lib/tomcat7/webapps/guacamole;
 
