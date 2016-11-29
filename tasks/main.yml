@@ -119,7 +119,9 @@
     shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
     args:
       chdir: /etc/guacamole
-      creates: [ "/etc/guacamole/key.pem", "/etc/guacamole/cert.pem" ]
+      creates:
+        - /etc/guacamole/key.pem
+        - /etc/guacamole/cert.pem
 
   - name: Modify guacd init script so it starts with SSL enabled
     lineinfile:
@@ -134,11 +136,22 @@
       line: "sslinfo='-K /etc/guacamole/key.pem -C /etc/guacamole/cert.pem'"
       state: present
 
-  - name: Open Nginx port
-    ufw: rule=allow port="{{ nginx_port }}"
+  - name: Open Nginx ports
+    ufw: rule=allow port="{{ item }}"
+    with_items:
+      - "{{ nginx_port }}"
+      - "{{ nginx_https_port }}"
 
   - name: Close Tomcat7 port
     ufw: rule=allow port="{{ tomcat_port }}" delete=yes
+
+  - name: Create self-signed SSL certs for HTTPS
+    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+    args:
+      chdir: /etc/nginx
+      creates:
+        - /etc/nginx/key.pem
+        - /etc/nginx/cert.pem
   when: guacd_ssl == true
 
 - name: Cleanup temp files
