@@ -2,11 +2,11 @@
 
 GUACD_PORT: 4822
 GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
-guacamole_version: 0.9.9
 server_addr: localhost
 tomcat_port: 8080
 ssh_port: 22
 guacd_ssl: true
+nginx_port: 80
 
 server_dl_url: http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-0.9.9.tar.gz
 war_dl_url: http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-0.9.9.war
