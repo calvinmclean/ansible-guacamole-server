@@ -1,23 +1,26 @@
 ---
 
-GUACD_PORT: 4822
 GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
-server_addr: localhost
-tomcat_port: 8080
-ssh_port: 22
+
+# Variables for guacamole.properties
+guacd_port: 4822
 guacd_ssl: true
-
-nginx_port: 80
-nginx_https_port: 443
-
-server_dl_url: http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-0.9.9.tar.gz
-war_dl_url: http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-0.9.9.war
-
+server_addr: localhost
 hmac_secret: secret
 hmac_age_limit: 600000
 
-allowed_origins: "*"
+# System ports
+ssh_port: 22
+tomcat_port: 8080
+nginx_port: 80
+nginx_https_port: 443
 
+# Download URLS
+server_dl_url: http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-0.9.9.tar.gz
+war_dl_url: http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-0.9.9.war
+
+# CORS
+allowed_origins: "*"
 cors_filter: |2
       <filter>
         <filter-name>CorsFilter</filter-name>
