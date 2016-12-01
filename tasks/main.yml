@@ -92,11 +92,7 @@
   - debug: msg="Tomcat7 and ufw configuration"
 
   - name: Add CorsFilter to Tomcat7
-    blockinfile:
-      dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
-      insertafter: "<!-- Basic config -->"
-      state: present
-      block: "{{ cors_filter }}"
+    template: src="web.xml.j2" dest="/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml" force=yes
 
   - name: Set Tomcat7 port
     lineinfile:
@@ -104,9 +100,6 @@
       state: present
       regexp: <Connector port="8080" protocol="HTTP/1.1"
       line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
-
-  - name: Open Tomcat7 port
-    ufw: rule=allow port="{{ tomcat_port }}" state=enabled
 
   - name: Open SSH port
     ufw: rule=allow port="{{ ssh_port }}"
@@ -126,14 +119,14 @@
   - name: Modify guacd init script so it starts with SSL enabled
     lineinfile:
       dest: /etc/init.d/guacd
-      regexp: '^    getpid \> /dev/null \|\| \$exec -p \"\$pidfile\"'
-      line: '    getpid > /dev/null || $exec -p "$pidfile" $sslinfo'
+      insertafter: '^pidfile\=\"/var/run/\$prog.pid\"'
+      line: "sslinfo='-K /etc/guacamole/key.pem -C /etc/guacamole/cert.pem'"
       state: present
 
   - lineinfile:
       dest: /etc/init.d/guacd
-      insertafter: '^pidfile\=\"/var/run/\$prog.pid\"'
-      line: "sslinfo='-K /etc/guacamole/key.pem -C /etc/guacamole/cert.pem'"
+      regexp: '^    getpid \> /dev/null \|\| \$exec -p \"\$pidfile\"'
+      line: '    getpid > /dev/null || $exec -p "$pidfile" $sslinfo'
       state: present
 
   - name: Open Nginx ports
@@ -152,6 +145,16 @@
       creates:
         - /etc/nginx/key.pem
         - /etc/nginx/cert.pem
+    when: (https_key == "key.pem") and (https_cert == "cert.pem")
+
+  - name: Copy SSL cert to /etc/nginx/
+    copy: src="files/{{ https_cert }}" dest="/etc/nginx/{{ https_cert }}"
+    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+
+  - name: Copy SSL key to /etc/nginx/
+    copy: src="files/{{ https_key }}" dest="/etc/nginx/{{ https_key }}"
+    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+
   when: guacd_ssl == true
 
 - name: Cleanup temp files
