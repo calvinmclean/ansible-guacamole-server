@@ -20,29 +20,8 @@ server_dl_url: http://sourceforge.net/projects/guacamole/files/current/source/gu
 war_dl_url: http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-0.9.9.war
 
 # CORS
-allowed_origins: "*"
-cors_filter: |2
-      <filter>
-        <filter-name>CorsFilter</filter-name>
-        <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
-        <init-param>
-            <param-name>cors.allowed.origins</param-name>
-            <param-value>{{ allowed_origins }}</param-value>
-        </init-param>
-        <init-param>
-            <param-name>cors.allowed.methods</param-name>
-            <param-value>GET,POST,HEAD,OPTIONS,OPTIONS,PUT</param-value>
-        </init-param>
-        <init-param>
-            <param-name>cors.allowed.headers</param-name>
-            <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
-        </init-param>
-        <init-param>
-            <param-name>cors.exposed.headers</param-name>
-            <param-value>Access-Control-Allow-Origin,Access-Control-Allow-Credentials</param-value>
-        </init-param>
-      </filter>
-      <filter-mapping>
-        <filter-name>CorsFilter</filter-name>
-        <url-pattern>{{ allowed_origins }}</url-pattern>
-      </filter-mapping>
+cors_allowed_origins: "*"
+
+# Cert/key pair to use for Nginx HTTPS
+https_cert: cert.pem
+https_key: key.pem
