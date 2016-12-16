@@ -1,20 +1,21 @@
 ---
 
 PACKAGES:
-# Guacamole dependencies
-  - libcairo2-dev
-  - libjpeg62-dev
-  - libpng12-dev
-  - libpango1.0-dev
-  - libssh2-1-dev
-  - libssl-dev
-  - libossp-uuid-dev
-# Other
-  - tomcat7
-  - software-properties-common
-  - default-jdk
-  - git
-  - maven
-  - ufw
-  - nginx
-  - openssl
+  prep:
+    - software-properties-common
+    - git
+    - nginx
+    - openssl
+    - ufw
+  guacd:
+    - libcairo2-dev
+    - libjpeg62-dev
+    - libpng12-dev
+    - libpango1.0-dev
+    - libssh2-1-dev
+    - libssl-dev
+    - libossp-uuid-dev
+  web_client:
+    - tomcat7
+    - default-jdk
+    - maven

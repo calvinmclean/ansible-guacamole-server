@@ -4,13 +4,17 @@
   include_vars: "{{ ansible_distribution }}.yml"
   tags: vars
 
-- tags: install
+- tags: prepare
   block:
-  - debug: msg="Install Guacamole server (guacd) and Guacamole client"
-
-  - name: Install dependencies for guacamole
+  - name: Install some tools that are depended on later
     package: name={{ item }} state=present
-    with_items: '{{ PACKAGES }}'
+    with_items: '{{ PACKAGES.prep }}'
+
+- tags: guacd
+  block:
+  - name: Install guacd dependencies
+    package: name={{ item }} state=present
+    with_items: '{{ PACKAGES.guacd }}'
 
   - name: install libvncserver
     package: name=libvncserver-dev state=present
@@ -38,14 +42,11 @@
     shell: ldconfig
     when: guacd_build.changed == true
 
-  - name: Make GUACAMOLE_HOME directory
-    file: path='{{ GUACAMOLE_HOME }}' state=directory
-
-  - name: Symbolically link GUACAMOLE_HOME to /etc/guacamole
-    file: src='{{ GUACAMOLE_HOME }}' dest=/etc/guacamole state=link
-
-  - name: Make GUACAMOLE_HOME/extensions directory
-    file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
+- tags: web_client
+  block:
+  - name: Install web client dependencies
+    package: name={{ item }} state=present
+    with_items: '{{ PACKAGES.web_client }}'
 
   - name: Download Guacamole webapp to destination directory
     get_url: url={{ war_dl_url }} dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
@@ -54,6 +55,15 @@
     retries: 5
     delay: 5
     ignore_errors: yes
+
+  - name: Make GUACAMOLE_HOME directory
+    file: path='{{ GUACAMOLE_HOME }}' state=directory
+
+  - name: Symbolically link GUACAMOLE_HOME to /etc/guacamole
+    file: src='{{ GUACAMOLE_HOME }}' dest=/etc/guacamole state=link
+
+  - name: Make GUACAMOLE_HOME/extensions directory
+    file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
 
   - name: Download guacamole-auth-hmac source
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
@@ -64,13 +74,15 @@
   - name: Move hmac.jar to extensions directory
     copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/hmac.jar' remote_src=yes
 
-- tags: template
-  block:
-  - debug: msg="Use templates to configure important files"
-
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
 
+  - name: Restart Tomcat7 so that I can access its files
+    service: name=tomcat7 state=restarted
+    changed_when: False
+
+- tags: template
+  block:
   - name: Add nginx reverse proxy config to sites-available
     template: src="nginx-guacamole.j2" dest="/etc/nginx/sites-available/nginx-guacamole"
 
@@ -82,15 +94,6 @@
     with_items:
       - /etc/nginx/sites-available/default
       - /etc/nginx/sites-enabled/default
-
-  - name: Restart Tomcat7 so that I can access its files
-    service: name=tomcat7 state=restarted
-    changed_when: False
-
-- tags: configuration
-  block:
-  - debug: msg="Tomcat7 and ufw configuration"
-
   - name: Add CorsFilter to Tomcat7
     template: src="web.xml.j2" dest="/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml" force=yes
 
@@ -101,13 +104,8 @@
       regexp: <Connector port="8080" protocol="HTTP/1.1"
       line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
 
-  - name: Open SSH port
-    ufw: rule=allow port="{{ ssh_port }}"
-
 - tags: ssl
   block:
-  - debug: msg="Installing SSL between guacd and the web client"
-
   - name: Create self-signed SSL certs
     shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
     args:
@@ -118,15 +116,6 @@
 
   - name: Add /etc/guacamole/guacd.conf w/ SSL paths
     template: src="guacd.conf.j2" dest="/etc/guacamole/guacd.conf"
-
-  - name: Open Nginx ports
-    ufw: rule=allow port="{{ item }}"
-    with_items:
-      - "{{ nginx_port }}"
-      - "{{ nginx_https_port }}"
-
-  - name: Close Tomcat7 port
-    ufw: rule=deny port="{{ tomcat_port }}" state=enabled
 
   - name: Create self-signed SSL certs for HTTPS
     shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
@@ -146,6 +135,18 @@
     when: (https_key != "key.pem") and (https_cert != "cert.pem")
 
   when: guacd_ssl == true
+
+- tags: ufw
+  block:
+  - name: Open ports
+    ufw: rule=allow port="{{ item }}" state=enabled
+    with_items:
+      - "{{ nginx_port }}"
+      - "{{ nginx_https_port }}"
+      - "{{ ssh_port }}"
+
+  - name: Close Tomcat7 port
+    ufw: rule=deny port="{{ tomcat_port }}"
 
 - name: Cleanup temp files
   file: path={{ item }} state=absent
