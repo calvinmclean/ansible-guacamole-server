@@ -116,18 +116,8 @@
         - /etc/guacamole/key.pem
         - /etc/guacamole/cert.pem
 
-  - name: Modify guacd init script so it starts with SSL enabled
-    lineinfile:
-      dest: /etc/init.d/guacd
-      insertafter: '^pidfile\=\"/var/run/\$prog.pid\"'
-      line: "sslinfo='-K /etc/guacamole/key.pem -C /etc/guacamole/cert.pem'"
-      state: present
-
-  - lineinfile:
-      dest: /etc/init.d/guacd
-      regexp: '^    getpid \> /dev/null \|\| \$exec -p \"\$pidfile\"'
-      line: '    getpid > /dev/null || $exec -p "$pidfile" $sslinfo'
-      state: present
+  - name: Add /etc/guacamole/guacd.conf w/ SSL paths
+    template: src="guacd.conf.j2" dest="/etc/guacamole/guacd.conf"
 
   - name: Open Nginx ports
     ufw: rule=allow port="{{ item }}"
@@ -136,7 +126,7 @@
       - "{{ nginx_https_port }}"
 
   - name: Close Tomcat7 port
-    ufw: rule=allow port="{{ tomcat_port }}" delete=yes
+    ufw: rule=deny port="{{ tomcat_port }}" state=enabled
 
   - name: Create self-signed SSL certs for HTTPS
     shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
@@ -171,4 +161,3 @@
   with_items: [ tomcat7, guacd, nginx, ufw ]
   ignore_errors: yes
   tags: restart
-  changed_when: False
