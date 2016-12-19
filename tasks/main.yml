@@ -162,6 +162,3 @@
   ignore_errors: yes
   tags: restart
   changed_when: False
-
-- name: finish message
-  debug: msg="Finished. Note that there are temporary files in /tmp from the install that were not removed for idempotency."
