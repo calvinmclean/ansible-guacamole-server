@@ -42,11 +42,12 @@ script:
     || (echo 'Test for role result: fail' && exit 1)
 
   # 4. Idempotence test (run playbook again to confirm nothing changes)
-  # - >
-  #   sudo docker exec test_dummy ansible-playbook /etc/ansible/roles/role_under_test/tests/test.yml -i tests/inventory --connection=local
-  #   | grep -q 'changed=0.*failed=0'
-  #   && (echo 'Idempotence test: pass' && exit 0)
-  #   || (echo 'Idempotence test: fail' && exit 1)
+  # Note that this test allows for 2 changes because 2 of my tasks will always make changes (installing dev packages)
+  - >
+    sudo docker exec test_dummy ansible-playbook "$TEST_DIR"/test.yml -i tests/inventory --connection=local
+    | grep -q 'changed=2.*failed=0'
+    && (echo 'Idempotence test: pass' && exit 0)
+    || (echo 'Idempotence test: fail' && exit 1)
 
 # notifications:
 #   webhooks:

@@ -57,45 +57,64 @@
     ignore_errors: yes
 
   - name: Make GUACAMOLE_HOME directory
-    file: path='{{ GUACAMOLE_HOME }}' state=directory
+    file: path={{ GUACAMOLE_HOME }} state=directory
 
   - name: Symbolically link GUACAMOLE_HOME to /etc/guacamole
-    file: src='{{ GUACAMOLE_HOME }}' dest=/etc/guacamole state=link
+    file: src={{ GUACAMOLE_HOME }} dest=/etc/guacamole state=link
 
   - name: Make GUACAMOLE_HOME/extensions directory
-    file: path='{{ GUACAMOLE_HOME }}/extensions' state=directory
+    file: path={{ GUACAMOLE_HOME }}/extensions state=directory
 
   - name: Download guacamole-auth-hmac source
     git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
 
   - name: Build the jar
-    shell: mvn package chdir=/tmp/guacamole-auth-hmac
+    shell: mvn package chdir=/tmp/guacamole-auth-hmac creates=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar
+
 
   - name: Move hmac.jar to extensions directory
-    copy: src="/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar" dest='{{ GUACAMOLE_HOME }}/extensions/hmac.jar' remote_src=yes
+    copy: src=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar dest={{ GUACAMOLE_HOME }}/extensions/hmac.jar remote_src=yes
 
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
-    template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
+    template: src=guacamole.properties.j2 dest={{ GUACAMOLE_HOME }}/guacamole.properties
 
   - name: Restart Tomcat7 so that I can access its files
     service: name=tomcat7 state=restarted
     changed_when: False
 
-- tags: template
+- tags: reverse_proxy
   block:
   - name: Add nginx reverse proxy config to sites-available
-    template: src="nginx-guacamole.j2" dest="/etc/nginx/sites-available/nginx-guacamole"
+    template: src=nginx-guacamole.j2 dest=/etc/nginx/sites-available/nginx-guacamole
 
   - name: Create symbolic link for nginx config to sites-enabled
-    file: src="/etc/nginx/sites-available/nginx-guacamole" dest="/etc/nginx/sites-enabled/nginx-guacamole" state=link
+    file: src=/etc/nginx/sites-available/nginx-guacamole dest=/etc/nginx/sites-enabled/nginx-guacamole state=link
 
   - name: Remove sites-enabled and sites-available 'default' conf
     file: path="{{ item }}" state=absent
     with_items:
       - /etc/nginx/sites-available/default
       - /etc/nginx/sites-enabled/default
+
+  - name: Create self-signed SSL certs for HTTPS
+    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+    args:
+      chdir: /etc/nginx
+      creates: /etc/nginx/key.pem
+    when: (https_key == "key.pem") and (https_cert == "cert.pem")
+
+  - name: Copy SSL cert to /etc/nginx/
+    copy: src=files/{{ https_cert }} dest=/etc/nginx/{{ https_cert }}
+    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+
+  - name: Copy SSL key to /etc/nginx/
+    copy: src=files/{{ https_key }} dest=/etc/nginx/{{ https_key }}
+    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+
+- tags: tomcat
+  block:
   - name: Add CorsFilter to Tomcat7
-    template: src="web.xml.j2" dest="/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml" force=yes
+    template: src=web.xml.j2 dest=/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml force=yes
 
   - name: Set Tomcat7 port
     lineinfile:
@@ -104,36 +123,16 @@
       regexp: <Connector port="8080" protocol="HTTP/1.1"
       line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
 
-- tags: ssl
+- tags: guacd_ssl
   block:
   - name: Create self-signed SSL certs
     shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
     args:
       chdir: /etc/guacamole
-      creates:
-        - /etc/guacamole/key.pem
-        - /etc/guacamole/cert.pem
+      creates: /etc/guacamole/key.pem
 
   - name: Add /etc/guacamole/guacd.conf w/ SSL paths
-    template: src="guacd.conf.j2" dest="/etc/guacamole/guacd.conf"
-
-  - name: Create self-signed SSL certs for HTTPS
-    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
-    args:
-      chdir: /etc/nginx
-      creates:
-        - /etc/nginx/key.pem
-        - /etc/nginx/cert.pem
-    when: (https_key == "key.pem") and (https_cert == "cert.pem")
-
-  - name: Copy SSL cert to /etc/nginx/
-    copy: src="files/{{ https_cert }}" dest="/etc/nginx/{{ https_cert }}"
-    when: (https_key != "key.pem") and (https_cert != "cert.pem")
-
-  - name: Copy SSL key to /etc/nginx/
-    copy: src="files/{{ https_key }}" dest="/etc/nginx/{{ https_key }}"
-    when: (https_key != "key.pem") and (https_cert != "cert.pem")
-
+    template: src=guacd.conf.j2 dest=/etc/guacamole/guacd.conf
   when: guacd_ssl == true
 
 - tags: ufw
@@ -148,17 +147,18 @@
   - name: Close Tomcat7 port
     ufw: rule=deny port="{{ tomcat_port }}"
 
-- name: Cleanup temp files
-  file: path={{ item }} state=absent
-  with_items:
-    - /tmp/guacamole-server.tar.gz
-    - /tmp/guacamole-server-0.9.9
-    - /tmp/guacamole-auth-hmac
-  ignore_errors: yes
-  tags: cleanup
+# - name: Cleanup temp files
+#   file: path={{ item }} state=absent
+#   with_items:
+#     - /tmp/guacamole-server.tar.gz
+#     - /tmp/guacamole-server-0.9.9
+#     - /tmp/guacamole-auth-hmac
+#   ignore_errors: yes
+#   tags: cleanup
 
 - name: restart services (tomcat,guacd,nginx,ufw)
   service: name={{ item }} state=restarted enabled=yes
   with_items: [ tomcat7, guacd, nginx, ufw ]
   ignore_errors: yes
   tags: restart
+  changed_when: False
