@@ -81,7 +81,7 @@
     service: name=tomcat7 state=restarted
     changed_when: False
 
-- tags: template
+- tags: reverse_proxy
   block:
   - name: Add nginx reverse proxy config to sites-available
     template: src="nginx-guacamole.j2" dest="/etc/nginx/sites-available/nginx-guacamole"
@@ -94,28 +94,6 @@
     with_items:
       - /etc/nginx/sites-available/default
       - /etc/nginx/sites-enabled/default
-  - name: Add CorsFilter to Tomcat7
-    template: src="web.xml.j2" dest="/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml" force=yes
-
-  - name: Set Tomcat7 port
-    lineinfile:
-      dest: /var/lib/tomcat7/conf/server.xml
-      state: present
-      regexp: <Connector port="8080" protocol="HTTP/1.1"
-      line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
-
-- tags: ssl
-  block:
-  - name: Create self-signed SSL certs
-    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
-    args:
-      chdir: /etc/guacamole
-      creates:
-        - /etc/guacamole/key.pem
-        - /etc/guacamole/cert.pem
-
-  - name: Add /etc/guacamole/guacd.conf w/ SSL paths
-    template: src="guacd.conf.j2" dest="/etc/guacamole/guacd.conf"
 
   - name: Create self-signed SSL certs for HTTPS
     shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
@@ -134,6 +112,30 @@
     copy: src="files/{{ https_key }}" dest="/etc/nginx/{{ https_key }}"
     when: (https_key != "key.pem") and (https_cert != "cert.pem")
 
+- tags: tomcat
+  block:
+  - name: Add CorsFilter to Tomcat7
+    template: src="web.xml.j2" dest="/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml" force=yes
+
+  - name: Set Tomcat7 port
+    lineinfile:
+      dest: /var/lib/tomcat7/conf/server.xml
+      state: present
+      regexp: <Connector port="8080" protocol="HTTP/1.1"
+      line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
+
+- tags: guacd_ssl
+  block:
+  - name: Create self-signed SSL certs
+    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+    args:
+      chdir: /etc/guacamole
+      creates:
+        - /etc/guacamole/key.pem
+        - /etc/guacamole/cert.pem
+
+  - name: Add /etc/guacamole/guacd.conf w/ SSL paths
+    template: src="guacd.conf.j2" dest="/etc/guacamole/guacd.conf"
   when: guacd_ssl == true
 
 - tags: ufw
