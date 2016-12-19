@@ -16,8 +16,8 @@ nginx_port: 80
 nginx_https_port: 443
 
 # Download URLS
-server_dl_url: http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-0.9.9.tar.gz
-war_dl_url: http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-0.9.9.war
+server_dl_url: https://dist.apache.org/repos/dist/dev/incubator/guacamole/0.9.10-incubating-RC3/source/guacamole-server-0.9.10-incubating.tar.gz
+war_dl_url: https://dist.apache.org/repos/dist/dev/incubator/guacamole/0.9.10-incubating-RC3/binary/guacamole-0.9.10-incubating.war
 
 # CORS
 cors_allowed_origins: "*"

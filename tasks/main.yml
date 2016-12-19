@@ -28,12 +28,12 @@
     ignore_errors: yes
 
   - name: Extract the guacamole-server source
-    unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-0.9.9
+    unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-0.9.10-incubating
 
   - name: Build guacamole-server from source
     shell: '{{ item }}'
     args:
-      chdir: /tmp/guacamole-server-0.9.9
+      chdir: /tmp/guacamole-server-0.9.10-incubating
       creates: /usr/local/sbin/guacd
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
     register: guacd_build
