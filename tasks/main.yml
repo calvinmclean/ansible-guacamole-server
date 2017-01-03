@@ -54,7 +54,6 @@
     until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
     retries: 5
     delay: 5
-    ignore_errors: yes
 
   - name: Make GUACAMOLE_HOME directory
     file: path={{ GUACAMOLE_HOME }} state=directory
@@ -66,14 +65,13 @@
     file: path={{ GUACAMOLE_HOME }}/extensions state=directory
 
   - name: Download guacamole-auth-hmac source
-    git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
+    git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes version=incubating
 
   - name: Build the jar
-    shell: mvn package chdir=/tmp/guacamole-auth-hmac creates=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar
-
+    shell: mvn package chdir=/tmp/guacamole-auth-hmac creates=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar
 
   - name: Move hmac.jar to extensions directory
-    copy: src=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-1.0.jar dest={{ GUACAMOLE_HOME }}/extensions/hmac.jar remote_src=yes
+    copy: src=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar dest={{ GUACAMOLE_HOME }}/extensions/hmac.jar remote_src=yes
 
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src=guacamole.properties.j2 dest={{ GUACAMOLE_HOME }}/guacamole.properties
