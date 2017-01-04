@@ -20,7 +20,7 @@
     package: name=libvncserver-dev state=present
 
   - name: Download Guacamole server
-    get_url: url={{ server_dl_url }} dest=/tmp/guacamole-server.tar.gz timeout=30
+    get_url: url="{{ server_dl_url }}" dest=/tmp/guacamole-server.tar.gz timeout=30 checksum="sha256:8c2e45012875f24e960c20915f21ebaf9423c302b85e403bd3b187ee4f3da4bf"
     register: result
     until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
     retries: 5
@@ -48,12 +48,38 @@
     package: name={{ item }} state=present
     with_items: '{{ PACKAGES.web_client }}'
 
-  - name: Download Guacamole webapp to destination directory
-    get_url: url={{ war_dl_url }} dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
+  # - name: Download Guacamole webapp to destination directory
+  #   get_url: url="{{ war_dl_url }}" dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30
+  #   register: result
+  #   until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
+  #   retries: 5
+  #   delay: 5
+
+  # - name: Download Guacamole webapp
+  #   get_url: url="{{ war_dl_url }}" dest=/tmp/guacamole-web-client.war timeout=30
+  #   register: result
+  #   until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
+  #   retries: 5
+  #   delay: 5
+  #
+  # - name: Move Guacamole webapp
+  #   copy: src=/tmp/guacamole-web-client.war dest=/var/lib/tomcat7/webapps/guacamole.war remote_src=true
+
+  - name: Download Guacamole webapp source
+    get_url: url="{{ war_dl_url }}" dest=/tmp/guacamole-client.tar.gz timeout=30 checksum="sha256:1295d3efb8486d2d62340f754aa14640309a188891e80f90482801fe4337f562"
     register: result
     until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
     retries: 5
     delay: 5
+
+  - name: Extract the guacamole-server source
+    unarchive: src=/tmp/guacamole-client.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-client-0.9.10-incubating
+
+  - name: Build the webapp jar
+    shell: mvn package chdir=/tmp/guacamole-client-0.9.10-incubating creates=/tmp/guacamole-client-0.9.10-incubating/guacamole/target/guacamole-0.9.10-incubating.war
+
+  - name: Move Guacamole webapp
+    copy: src=/tmp/guacamole-client-0.9.10-incubating/guacamole/target/guacamole-0.9.10-incubating.war dest=/var/lib/tomcat7/webapps/guacamole.war remote_src=true
 
   - name: Make GUACAMOLE_HOME directory
     file: path={{ GUACAMOLE_HOME }} state=directory
@@ -71,12 +97,12 @@
     shell: mvn package chdir=/tmp/guacamole-auth-hmac creates=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar
 
   - name: Move hmac.jar to extensions directory
-    copy: src=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar dest={{ GUACAMOLE_HOME }}/extensions/hmac.jar remote_src=yes
+    copy: src=/tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar dest={{ GUACAMOLE_HOME }}/extensions/guacamole-auth-hmac-0.9.10-incubating.jar remote_src=yes
 
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
     template: src=guacamole.properties.j2 dest={{ GUACAMOLE_HOME }}/guacamole.properties
 
-  - name: Restart Tomcat7 so that I can access its files
+  - name: Restart Tomcat7 so its files are accessible
     service: name=tomcat7 state=restarted
     changed_when: False
 
