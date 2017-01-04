@@ -47,50 +47,12 @@
     package: name={{ item }} state=present
     with_items: '{{ PACKAGES.web_client }}'
 
-  # - name: Download Guacamole webapp source
-  #   get_url: url="{{ war_dl_url }}" dest=/tmp/guacamole-client.tar.gz timeout=30 checksum="sha256:1295d3efb8486d2d62340f754aa14640309a188891e80f90482801fe4337f562"
-  #   register: result
-  #   until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
-  #   retries: 5
-  #   delay: 5
-
-  # - name: Extract the guacamole-client source
-  #   unarchive: src=/tmp/guacamole-client.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-client-0.9.10-incubating
-
-  # - name: Build the webapp war
-  #   shell: mvn package
-  #   args:
-  #     chdir: /tmp/guacamole-client-0.9.10-incubating
-  #     creates: /tmp/guacamole-client-0.9.10-incubating/guacamole/target/guacamole-0.9.10-incubating.war
-
-  # - name: Delete the created targets
-  #   file: path="{{ item }}" state=absent
-  #   with_items:
-  #     - /tmp/guacamole-client-0.9.10-incubating/guacamole/target
-  #     - /tmp/guacamole-client-0.9.10-incubating/target
-  #
-  # - name: Rebuild the webapp war
-  #   shell: mvn package
-  #   args:
-  #     chdir: /tmp/guacamole-client-0.9.10-incubating
-  #     creates: /tmp/guacamole-client-0.9.10-incubating/guacamole/target/guacamole-0.9.10-incubating.war
-
-  - name: download with wget
-    shell: wget -o guacamole-0.9.10-incubating.war 'http://apache.org/dyn/closer.cgi?action=download&filename=incubator/guacamole/0.9.10-incubating/binary/guacamole-0.9.10-incubating.war'
-    args:
-      chdir: /tmp
-
-  - name: move webapp
-    copy:
-      src: /tmp/closer.cgi?action=download&filename=incubator%2Fguacamole%2F0.9.10-incubating%2Fbinary%2Fguacamole-0.9.10-incubating.war
-      dest: /var/lib/tomcat7/webapps/guacamole.war
-      remote_src: true
-
-  # - name: Move Guacamole webapp
-  #   copy:
-  #     src: /tmp/guacamole-client-0.9.10-incubating/guacamole/target/guacamole-0.9.10-incubating.war
-  #     dest: /var/lib/tomcat7/webapps/guacamole.war
-  #     remote_src: true
+  - name: Download Guacamole webapp pre-built war to destination
+    get_url: url="{{ war_dl_url }}" dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30 checksum="sha256:3f5319dc7a5c928f78ad6788f9a9aeeb2a96eca6a065319c3937e2e87fc6a981"
+    register: result
+    until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
+    retries: 5
+    delay: 5
 
   - name: Make GUACAMOLE_HOME directory
     file: path={{ GUACAMOLE_HOME }} state=directory
@@ -156,8 +118,8 @@
 
 - tags: tomcat
   block:
-  - name: Add CorsFilter to Tomcat7
-    template: src=web.xml.j2 dest=/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml force=yes
+  # - name: Add CorsFilter to Tomcat7
+  #   template: src=web.xml.j2 dest=/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml force=yes
 
   - name: Set Tomcat7 port
     lineinfile:
@@ -204,4 +166,4 @@
   with_items: [ tomcat7, guacd, nginx, ufw ]
   ignore_errors: yes
   tags: restart
-  # changed_when: False
+  changed_when: False
