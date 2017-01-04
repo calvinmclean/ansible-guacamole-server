@@ -4,7 +4,7 @@ GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
 
 # Variables for guacamole.properties
 guacd_port: 4822
-guacd_ssl: true
+guacd_ssl: false
 server_addr: localhost
 hmac_secret: secret
 hmac_age_limit: 600000
