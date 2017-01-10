@@ -118,8 +118,8 @@
 
 - tags: tomcat
   block:
-  # - name: Add CorsFilter to Tomcat7
-  #   template: src=web.xml.j2 dest=/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml force=yes
+  - name: Add CorsFilter to Tomcat7
+    template: src=web.xml.j2 dest=/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml force=yes
 
   - name: Set Tomcat7 port
     lineinfile:
