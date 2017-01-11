@@ -2,7 +2,7 @@
 
 *Master:* [![Build Status](https://travis-ci.org/calvinmclean/ansible-guacamole-server.svg?branch=master)](https://travis-ci.org/calvinmclean/ansible-guacamole-server) *Dev:* [![Build Status](https://travis-ci.org/calvinmclean/ansible-guacamole-server.svg?branch=dev)](https://travis-ci.org/calvinmclean/ansible-guacamole-server)
 
-Current guacamole version: **0.9.9**
+Current guacamole version: **0.9.10**
 
 Current tomcat version: **7**
 
