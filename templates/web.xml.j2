@@ -41,7 +41,7 @@
       </init-param>
       <init-param>
           <param-name>cors.allowed.headers</param-name>
-          <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
+          <param-value>Content-Type,X-Requested-With,Accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
       </init-param>
       <init-param>
           <param-name>cors.exposed.headers</param-name>
@@ -68,7 +68,7 @@
     </filter-mapping>
 
     <listener>
-        <listener-class>org.glyptodon.guacamole.net.basic.BasicServletContextListener</listener-class>
+        <listener-class>org.apache.guacamole.GuacamoleServletContextListener</listener-class>
     </listener>
 
     <!-- Audio file mimetype mappings -->
