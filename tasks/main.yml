@@ -73,7 +73,7 @@
 - tags: hmac
   block:
     - name: Download guacamole-auth-hmac source
-      git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes version=incubating
+      git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
 
     - name: Build the jar
       shell: mvn package
