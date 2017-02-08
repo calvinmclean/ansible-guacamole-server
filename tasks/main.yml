@@ -5,21 +5,31 @@
   tags: vars
 
 - name: Install pre-dependencies
-  package: name={{ item }} state=present
-  with_items: '{{ PACKAGES.prep }}'
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ PACKAGES.prep }}"
   tags: prepare
 
 - tags: guacd
   block:
   - name: Install guacd dependencies
-    package: name={{ item }} state=present
-    with_items: '{{ PACKAGES.guacd }}'
+    package:
+      name: "{{ item }}"
+      state: present
+    with_items: "{{ PACKAGES.guacd }}"
 
   - name: Install libvncserver
-    package: name=libvncserver-dev state=present
+    package:
+      name: libvncserver-dev
+      state: present
 
   - name: Download Guacamole server
-    get_url: url="{{ server_dl_url }}" dest=/tmp/guacamole-server.tar.gz timeout=30 checksum="sha256:8c2e45012875f24e960c20915f21ebaf9423c302b85e403bd3b187ee4f3da4bf"
+    get_url:
+      url: "{{ server_dl_url }}"
+      dest: /tmp/guacamole-server.tar.gz
+      timeout: 30
+      checksum: "sha256:8c2e45012875f24e960c20915f21ebaf9423c302b85e403bd3b187ee4f3da4bf"
     register: result
     until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
     retries: 5
@@ -27,10 +37,14 @@
     ignore_errors: yes
 
   - name: Extract the guacamole-server source
-    unarchive: src=/tmp/guacamole-server.tar.gz copy=no dest=/tmp creates=/tmp/guacamole-server-0.9.10-incubating
+    unarchive:
+      src: /tmp/guacamole-server.tar.gz
+      copy: no
+      dest: /tmp
+      creates: /tmp/guacamole-server-0.9.10-incubating
 
   - name: Build guacamole-server from source
-    shell: '{{ item }}'
+    command: "{{ item }}"
     args:
       chdir: /tmp/guacamole-server-0.9.10-incubating
       creates: /usr/local/sbin/guacd
@@ -38,45 +52,66 @@
     register: guacd_build
 
   - name: Run ldconfig if guacd was freshly installed
-    shell: ldconfig
+    command: ldconfig
     when: guacd_build.changed == true
 
 - tags: web_client
   block:
   - name: Install web client dependencies
-    package: name={{ item }} state=present
-    with_items: '{{ PACKAGES.web_client }}'
+    package:
+      name: "{{ item }}"
+      state: present
+    with_items: "{{ PACKAGES.web_client }}"
 
   - name: Download Guacamole webapp pre-built war to destination
-    get_url: url="{{ war_dl_url }}" dest=/var/lib/tomcat7/webapps/guacamole.war timeout=30 checksum="sha256:3f5319dc7a5c928f78ad6788f9a9aeeb2a96eca6a065319c3937e2e87fc6a981"
+    get_url:
+      url: "{{ war_dl_url }}"
+      dest: /var/lib/tomcat7/webapps/guacamole.war
+      timeout: 30
+      checksum: "sha256:3f5319dc7a5c928f78ad6788f9a9aeeb2a96eca6a065319c3937e2e87fc6a981"
     register: result
     until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
     retries: 5
     delay: 5
 
   - name: Make GUACAMOLE_HOME directory
-    file: path={{ GUACAMOLE_HOME }} state=directory
+    file:
+      path: "{{ GUACAMOLE_HOME }}"
+      state: directory
 
   - name: Symbolically link GUACAMOLE_HOME to /etc/guacamole
-    file: src={{ GUACAMOLE_HOME }} dest=/etc/guacamole state=link
+    file:
+      src: "{{ GUACAMOLE_HOME }}"
+      dest: /etc/guacamole
+      state: link
 
   - name: Make GUACAMOLE_HOME/extensions directory
-    file: path={{ GUACAMOLE_HOME }}/extensions state=directory
+    file:
+      path: "{{ GUACAMOLE_HOME }}/extensions"
+      state: directory
 
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
-    template: src=guacamole.properties.j2 dest={{ GUACAMOLE_HOME }}/guacamole.properties
+    template:
+      src: guacamole.properties.j2
+      dest: "{{ GUACAMOLE_HOME }}/guacamole.properties"
 
   - name: Restart Tomcat7 so its files are accessible
-    service: name=tomcat7 state=restarted
+    service:
+      name: tomcat7
+      state: restarted
     changed_when: False
 
 - tags: hmac
   block:
     - name: Download guacamole-auth-hmac source
-      git: clone=yes dest=/tmp/guacamole-auth-hmac repo=https://github.com/calvinmclean/guacamole-auth-hmac.git force=yes
+      git:
+        clone: yes
+        dest: /tmp/guacamole-auth-hmac
+        repo: https://github.com/calvinmclean/guacamole-auth-hmac.git
+        force: yes
 
     - name: Build the jar
-      shell: mvn package
+      command: mvn package
       args:
         chdir: /tmp/guacamole-auth-hmac
         creates: /tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar
@@ -90,36 +125,50 @@
 - tags: reverse_proxy
   block:
   - name: Add nginx reverse proxy config to sites-available
-    template: src=nginx-guacamole.j2 dest=/etc/nginx/sites-available/nginx-guacamole
+    template:
+      src: nginx-guacamole.j2
+      dest: /etc/nginx/sites-available/nginx-guacamole
 
   - name: Create symbolic link for nginx config to sites-enabled
-    file: src=/etc/nginx/sites-available/nginx-guacamole dest=/etc/nginx/sites-enabled/nginx-guacamole state=link
+    file:
+      src: /etc/nginx/sites-available/nginx-guacamole
+      dest: /etc/nginx/sites-enabled/nginx-guacamole
+      state: link
 
   - name: Remove sites-enabled and sites-available 'default' conf
-    file: path="{{ item }}" state=absent
+    file:
+      path: "{{ item }}"
+      state: absent
     with_items:
       - /etc/nginx/sites-available/default
       - /etc/nginx/sites-enabled/default
 
   - name: Create self-signed SSL certs for HTTPS
-    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+    command: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
     args:
       chdir: /etc/nginx
       creates: /etc/nginx/key.pem
     when: (https_key == "key.pem") and (https_cert == "cert.pem")
 
   - name: Copy SSL cert to /etc/nginx/
-    copy: src=files/{{ https_cert }} dest=/etc/nginx/{{ https_cert }}
+    copy:
+      src: files/"{{ https_cert }}"
+      dest: /etc/nginx/"{{ https_cert }}"
     when: (https_key != "key.pem") and (https_cert != "cert.pem")
 
   - name: Copy SSL key to /etc/nginx/
-    copy: src=files/{{ https_key }} dest=/etc/nginx/{{ https_key }}
+    copy:
+      src: files/"{{ https_key }}"
+      dest: /etc/nginx/"{{ https_key }}"
     when: (https_key != "key.pem") and (https_cert != "cert.pem")
 
 - tags: tomcat
   block:
   - name: Add CorsFilter to Tomcat7
-    template: src=web.xml.j2 dest=/var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml force=yes
+    template:
+      src: web.xml.j2
+      dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
+      force: yes
 
   - name: Set Tomcat7 port
     lineinfile:
@@ -131,38 +180,51 @@
 - tags: guacd_ssl
   block:
   - name: Create self-signed SSL certs
-    shell: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+    command: >
+      openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
     args:
       chdir: /etc/guacamole
       creates: /etc/guacamole/key.pem
 
   - name: Add /etc/guacamole/guacd.conf w/ SSL paths
-    template: src=guacd.conf.j2 dest=/etc/guacamole/guacd.conf
+    template:
+      src: guacd.conf.j2
+      dest: /etc/guacamole/guacd.conf
   when: guacd_ssl == true
 
 - tags: ufw
   block:
   - name: Open ports
-    ufw: rule=allow port="{{ item }}" state=enabled
+    ufw:
+      rule: allow
+      port: "{{ item }}"
+      state: enabled
     with_items:
       - "{{ nginx_port }}"
       - "{{ nginx_https_port }}"
       - "{{ ssh_port }}"
 
   - name: Close Tomcat7 port
-    ufw: rule=deny port="{{ tomcat_port }}"
+    ufw:
+      rule: deny
+      port: "{{ tomcat_port }}"
 
-# - name: Cleanup temp files
-#   file: path={{ item }} state=absent
-#   with_items:
-#     - /tmp/guacamole-server.tar.gz
-#     - /tmp/guacamole-server-0.9.9
-#     - /tmp/guacamole-auth-hmac
-#   ignore_errors: yes
-#   tags: cleanup
+- name: Cleanup temp files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /tmp/guacamole-server.tar.gz
+    - /tmp/guacamole-server-0.9.10-incubating
+    - /tmp/guacamole-auth-hmac
+  ignore_errors: yes
+  tags: cleanup
 
 - name: restart services (tomcat,guacd,nginx,ufw)
-  service: name={{ item }} state=restarted enabled=yes
+  service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
   with_items: [ tomcat7, guacd, nginx, ufw ]
   ignore_errors: yes
   tags: restart
