@@ -4,7 +4,7 @@
   include_vars: "{{ ansible_distribution }}.yml"
   tags: vars
 
-- name: Install some tools that are depended on later
+- name: Install pre-dependencies
   package: name={{ item }} state=present
   with_items: '{{ PACKAGES.prep }}'
   tags: prepare
