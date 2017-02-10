@@ -46,55 +46,55 @@
 
 - tags: reverse_proxy
   block:
-  - name: Add nginx reverse proxy config to sites-available
-    template:
-      src: nginx-guacamole.j2
-      dest: /etc/nginx/sites-available/nginx-guacamole
+    - name: Add nginx reverse proxy config to sites-available
+      template:
+        src: nginx-guacamole.j2
+        dest: /etc/nginx/sites-available/nginx-guacamole
 
-  - name: Create symbolic link for nginx config to sites-enabled
-    file:
-      src: /etc/nginx/sites-available/nginx-guacamole
-      dest: /etc/nginx/sites-enabled/nginx-guacamole
-      state: link
+    - name: Create symbolic link for nginx config to sites-enabled
+      file:
+        src: /etc/nginx/sites-available/nginx-guacamole
+        dest: /etc/nginx/sites-enabled/nginx-guacamole
+        state: link
 
-  - name: Remove sites-enabled and sites-available 'default' conf
-    file:
-      path: "{{ item }}"
-      state: absent
-    with_items:
-      - /etc/nginx/sites-available/default
-      - /etc/nginx/sites-enabled/default
+    - name: Remove sites-enabled and sites-available 'default' conf
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/nginx/sites-available/default
+        - /etc/nginx/sites-enabled/default
 
-  - name: Create self-signed SSL certs for HTTPS
-    command: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
-    args:
-      chdir: /etc/nginx
-      creates: /etc/nginx/key.pem
-    when: (https_key == "key.pem") and (https_cert == "cert.pem")
+    - name: Create self-signed SSL certs for HTTPS
+      command: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+      args:
+        chdir: /etc/nginx
+        creates: /etc/nginx/key.pem
+      when: (https_key == "key.pem") and (https_cert == "cert.pem")
 
-  - name: Copy SSL cert to /etc/nginx/
-    copy:
-      src: files/"{{ https_cert }}"
-      dest: /etc/nginx/"{{ https_cert }}"
-    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+    - name: Copy SSL cert to /etc/nginx/
+      copy:
+        src: files/"{{ https_cert }}"
+        dest: /etc/nginx/"{{ https_cert }}"
+      when: (https_key != "key.pem") and (https_cert != "cert.pem")
 
-  - name: Copy SSL key to /etc/nginx/
-    copy:
-      src: files/"{{ https_key }}"
-      dest: /etc/nginx/"{{ https_key }}"
-    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+    - name: Copy SSL key to /etc/nginx/
+      copy:
+        src: files/"{{ https_key }}"
+        dest: /etc/nginx/"{{ https_key }}"
+      when: (https_key != "key.pem") and (https_cert != "cert.pem")
 
 - tags: tomcat
   block:
-  - name: Add CorsFilter to Tomcat7
-    template:
-      src: web.xml.j2
-      dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
-      force: yes
+    - name: Add CorsFilter to Tomcat7
+      template:
+        src: web.xml.j2
+        dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
+        force: yes
 
-  - name: Set Tomcat7 port
-    lineinfile:
-      dest: /var/lib/tomcat7/conf/server.xml
-      state: present
-      regexp: <Connector port="8080" protocol="HTTP/1.1"
-      line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
+    - name: Set Tomcat7 port
+      lineinfile:
+        dest: /var/lib/tomcat7/conf/server.xml
+        state: present
+        regexp: <Connector port="8080" protocol="HTTP/1.1"
+        line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'

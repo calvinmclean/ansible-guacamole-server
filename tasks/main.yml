@@ -42,20 +42,20 @@
 
 - tags: ufw
   block:
-  - name: Open ports
-    ufw:
-      rule: allow
-      port: "{{ item }}"
-      state: enabled
-    with_items:
-      - "{{ nginx_port }}"
-      - "{{ nginx_https_port }}"
-      - "{{ ssh_port }}"
+    - name: Open ports
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        state: enabled
+      with_items:
+        - "{{ nginx_port }}"
+        - "{{ nginx_https_port }}"
+        - "{{ ssh_port }}"
 
-  - name: Close Tomcat7 port
-    ufw:
-      rule: deny
-      port: "{{ tomcat_port }}"
+    - name: Close Tomcat7 port
+      ufw:
+        rule: deny
+        port: "{{ tomcat_port }}"
 
 - name: Cleanup temp files
   file:
