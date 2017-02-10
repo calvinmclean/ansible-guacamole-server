@@ -11,95 +11,13 @@
   with_items: "{{ PACKAGES.prep }}"
   tags: prepare
 
-- tags: guacd
-  block:
-  - name: Install guacd dependencies
-    package:
-      name: "{{ item }}"
-      state: present
-    with_items: "{{ PACKAGES.guacd }}"
+- name: Include guacd tasks
+  include: guacd.yml
+  tags: guacd
 
-  - name: Install libvncserver
-    package:
-      name: libvncserver-dev
-      state: present
-
-  - name: Download Guacamole server
-    get_url:
-      url: "{{ server_dl_url }}"
-      dest: /tmp/guacamole-server.tar.gz
-      timeout: 30
-      checksum: "sha256:8c2e45012875f24e960c20915f21ebaf9423c302b85e403bd3b187ee4f3da4bf"
-    register: result
-    until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
-    retries: 5
-    delay: 5
-    ignore_errors: yes
-
-  - name: Extract the guacamole-server source
-    unarchive:
-      src: /tmp/guacamole-server.tar.gz
-      copy: no
-      dest: /tmp
-      creates: /tmp/guacamole-server-0.9.10-incubating
-
-  - name: Build guacamole-server from source
-    command: "{{ item }}"
-    args:
-      chdir: /tmp/guacamole-server-0.9.10-incubating
-      creates: /usr/local/sbin/guacd
-    with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
-    register: guacd_build
-
-  - name: Run ldconfig if guacd was freshly installed
-    command: ldconfig
-    when: guacd_build.changed == true
-
-- tags: web_client
-  block:
-  - name: Install web client dependencies
-    package:
-      name: "{{ item }}"
-      state: present
-    with_items: "{{ PACKAGES.web_client }}"
-
-  - name: Download Guacamole webapp pre-built war to destination
-    get_url:
-      url: "{{ war_dl_url }}"
-      dest: /var/lib/tomcat7/webapps/guacamole.war
-      timeout: 30
-      checksum: "sha256:3f5319dc7a5c928f78ad6788f9a9aeeb2a96eca6a065319c3937e2e87fc6a981"
-    register: result
-    until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
-    retries: 5
-    delay: 5
-
-  - name: Make GUACAMOLE_HOME directory
-    file:
-      path: "{{ GUACAMOLE_HOME }}"
-      state: directory
-
-  - name: Symbolically link GUACAMOLE_HOME to /etc/guacamole
-    file:
-      src: "{{ GUACAMOLE_HOME }}"
-      dest: /etc/guacamole
-      state: link
-
-  - name: Make GUACAMOLE_HOME/extensions directory
-    file:
-      path: "{{ GUACAMOLE_HOME }}/extensions"
-      state: directory
-
-  - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
-    template:
-      src: guacamole.properties.j2
-      dest: "{{ GUACAMOLE_HOME }}/guacamole.properties"
-
-  - name: Restart Tomcat7 so its files are accessible
-    service:
-      name: tomcat7
-      state: restarted
-    changed_when: False
+- name: Include web_client tasks
+  include: web_client.yml
+  tags: web_client
 
 - tags: hmac
   block:
@@ -122,92 +40,22 @@
         dest: "{{ GUACAMOLE_HOME }}/extensions/guacamole-auth-hmac-0.9.10-incubating.jar"
         remote_src: yes
 
-- tags: reverse_proxy
-  block:
-  - name: Add nginx reverse proxy config to sites-available
-    template:
-      src: nginx-guacamole.j2
-      dest: /etc/nginx/sites-available/nginx-guacamole
-
-  - name: Create symbolic link for nginx config to sites-enabled
-    file:
-      src: /etc/nginx/sites-available/nginx-guacamole
-      dest: /etc/nginx/sites-enabled/nginx-guacamole
-      state: link
-
-  - name: Remove sites-enabled and sites-available 'default' conf
-    file:
-      path: "{{ item }}"
-      state: absent
-    with_items:
-      - /etc/nginx/sites-available/default
-      - /etc/nginx/sites-enabled/default
-
-  - name: Create self-signed SSL certs for HTTPS
-    command: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
-    args:
-      chdir: /etc/nginx
-      creates: /etc/nginx/key.pem
-    when: (https_key == "key.pem") and (https_cert == "cert.pem")
-
-  - name: Copy SSL cert to /etc/nginx/
-    copy:
-      src: files/"{{ https_cert }}"
-      dest: /etc/nginx/"{{ https_cert }}"
-    when: (https_key != "key.pem") and (https_cert != "cert.pem")
-
-  - name: Copy SSL key to /etc/nginx/
-    copy:
-      src: files/"{{ https_key }}"
-      dest: /etc/nginx/"{{ https_key }}"
-    when: (https_key != "key.pem") and (https_cert != "cert.pem")
-
-- tags: tomcat
-  block:
-  - name: Add CorsFilter to Tomcat7
-    template:
-      src: web.xml.j2
-      dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
-      force: yes
-
-  - name: Set Tomcat7 port
-    lineinfile:
-      dest: /var/lib/tomcat7/conf/server.xml
-      state: present
-      regexp: <Connector port="8080" protocol="HTTP/1.1"
-      line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
-
-- tags: guacd_ssl
-  block:
-  - name: Create self-signed SSL certs
-    command: >
-      openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
-    args:
-      chdir: /etc/guacamole
-      creates: /etc/guacamole/key.pem
-
-  - name: Add /etc/guacamole/guacd.conf w/ SSL paths
-    template:
-      src: guacd.conf.j2
-      dest: /etc/guacamole/guacd.conf
-  when: guacd_ssl == true
-
 - tags: ufw
   block:
-  - name: Open ports
-    ufw:
-      rule: allow
-      port: "{{ item }}"
-      state: enabled
-    with_items:
-      - "{{ nginx_port }}"
-      - "{{ nginx_https_port }}"
-      - "{{ ssh_port }}"
+    - name: Open ports
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        state: enabled
+      with_items:
+        - "{{ nginx_port }}"
+        - "{{ nginx_https_port }}"
+        - "{{ ssh_port }}"
 
-  - name: Close Tomcat7 port
-    ufw:
-      rule: deny
-      port: "{{ tomcat_port }}"
+    - name: Close Tomcat7 port
+      ufw:
+        rule: deny
+        port: "{{ tomcat_port }}"
 
 - name: Cleanup temp files
   file:

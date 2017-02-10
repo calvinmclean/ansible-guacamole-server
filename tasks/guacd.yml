@@ -1,0 +1,58 @@
+---
+
+- name: Install guacd dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ PACKAGES.guacd }}"
+
+- name: Install libvncserver
+  package:
+    name: libvncserver-dev
+    state: present
+
+- name: Download Guacamole server
+  get_url:
+    url: "{{ server_dl_url }}"
+    dest: /tmp/guacamole-server.tar.gz
+    timeout: 30
+    checksum: "sha256:8c2e45012875f24e960c20915f21ebaf9423c302b85e403bd3b187ee4f3da4bf"
+  register: result
+  until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
+  retries: 5
+  delay: 5
+  ignore_errors: yes
+
+- name: Extract the guacamole-server source
+  unarchive:
+    src: /tmp/guacamole-server.tar.gz
+    copy: no
+    dest: /tmp
+    creates: /tmp/guacamole-server-0.9.10-incubating
+
+- name: Build guacamole-server from source
+  command: "{{ item }}"
+  args:
+    chdir: /tmp/guacamole-server-0.9.10-incubating
+    creates: /usr/local/sbin/guacd
+  with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
+  register: guacd_build
+
+- name: Run ldconfig if guacd was freshly installed
+  command: ldconfig
+  when: guacd_build.changed == true
+
+- tags: guacd_ssl
+  block:
+    - name: Create self-signed SSL certs
+      command: >
+        openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+      args:
+        chdir: /etc/guacamole
+        creates: /etc/guacamole/key.pem
+
+    - name: Add /etc/guacamole/guacd.conf w/ SSL paths
+      template:
+        src: guacd.conf.j2
+        dest: /etc/guacamole/guacd.conf
+  when: guacd_ssl == true
