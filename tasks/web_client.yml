@@ -1,0 +1,100 @@
+---
+
+- name: Install web client dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ PACKAGES.web_client }}"
+
+- name: Download Guacamole webapp pre-built war to destination
+  get_url:
+    url: "{{ war_dl_url }}"
+    dest: /var/lib/tomcat7/webapps/guacamole.war
+    timeout: 30
+    checksum: "sha256:3f5319dc7a5c928f78ad6788f9a9aeeb2a96eca6a065319c3937e2e87fc6a981"
+  register: result
+  until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
+  retries: 5
+  delay: 5
+
+- name: Make GUACAMOLE_HOME directory
+  file:
+    path: "{{ GUACAMOLE_HOME }}"
+    state: directory
+
+- name: Symbolically link GUACAMOLE_HOME to /etc/guacamole
+  file:
+    src: "{{ GUACAMOLE_HOME }}"
+    dest: /etc/guacamole
+    state: link
+
+- name: Make GUACAMOLE_HOME/extensions directory
+  file:
+    path: "{{ GUACAMOLE_HOME }}/extensions"
+    state: directory
+
+- name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
+  template:
+    src: guacamole.properties.j2
+    dest: "{{ GUACAMOLE_HOME }}/guacamole.properties"
+
+- name: Restart Tomcat7 so its files are accessible
+  service:
+    name: tomcat7
+    state: restarted
+  changed_when: False
+
+- tags: reverse_proxy
+  block:
+  - name: Add nginx reverse proxy config to sites-available
+    template:
+      src: nginx-guacamole.j2
+      dest: /etc/nginx/sites-available/nginx-guacamole
+
+  - name: Create symbolic link for nginx config to sites-enabled
+    file:
+      src: /etc/nginx/sites-available/nginx-guacamole
+      dest: /etc/nginx/sites-enabled/nginx-guacamole
+      state: link
+
+  - name: Remove sites-enabled and sites-available 'default' conf
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - /etc/nginx/sites-available/default
+      - /etc/nginx/sites-enabled/default
+
+  - name: Create self-signed SSL certs for HTTPS
+    command: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+    args:
+      chdir: /etc/nginx
+      creates: /etc/nginx/key.pem
+    when: (https_key == "key.pem") and (https_cert == "cert.pem")
+
+  - name: Copy SSL cert to /etc/nginx/
+    copy:
+      src: files/"{{ https_cert }}"
+      dest: /etc/nginx/"{{ https_cert }}"
+    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+
+  - name: Copy SSL key to /etc/nginx/
+    copy:
+      src: files/"{{ https_key }}"
+      dest: /etc/nginx/"{{ https_key }}"
+    when: (https_key != "key.pem") and (https_cert != "cert.pem")
+
+- tags: tomcat
+  block:
+  - name: Add CorsFilter to Tomcat7
+    template:
+      src: web.xml.j2
+      dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
+      force: yes
+
+  - name: Set Tomcat7 port
+    lineinfile:
+      dest: /var/lib/tomcat7/conf/server.xml
+      state: present
+      regexp: <Connector port="8080" protocol="HTTP/1.1"
+      line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
