@@ -12,7 +12,7 @@ Current tomcat version: **7**
 |-------------------------|----------|---------|---------------------------|------------------------------------------|
 | GUACAMOLE_HOME          | yes      | /usr/share/tomcat7/.guacamole |                | [Read this if you want to move `GUACAMOLE_HOME`](http://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html)|
 | guacd_port              | yes      | 4822    | any port                  | used in `guacamole.properties` template   |
-| guacd_ssl               | yes      | true    | true, false               | used in `guacamole.properties` template. Also enables extra tasks to configure SSL |
+| guacd_ssl               | yes      | false    | true, false               | used in `guacamole.properties` template. Also enables extra tasks to configure SSL |
 | server_addr             | yes      | localhost  | hostname of the server | used in `guacamole.properties`|
 | hmac_secret             | yes      | secret  | any string                | HMAC auth relies on this, so make it good!                         |
 | hmac_age_limit          | yes      | 600,000 milliseconds | time in seconds   | used in `gucamole.properties` template to set how long a generated URL is valid|
@@ -20,10 +20,12 @@ Current tomcat version: **7**
 | tomcat_port             | yes      | 8080    | any port                  | Port used by Tomcat7 servlet   |
 | nginx_port              | yes      | 80      | any port                  | Port used by Nginx for HTTP (only changed in weird circumstances)   |
 | nginx_https_port        | yes      | 443     | any port                  | Port used by Nginx for HTTPS (only changed in weird circumstances)   |
-| server_dl_url           | yes      | http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-0.9.9.tar.gz |  | Used mostly to keep ugly URL out of the tasks, but also good if you need a different mirror  |
-| war_dl_url              | yes      | http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-0.9.9.war |  | Used mostly to keep ugly URL out of the tasks, but also good if you need a different mirror  |
-| allowed_origins         | yes      | *       |                   | Origins that Tomcat7 will allow HTTP requests to come from |
+| server_dl_url           | yes      | http://apache.org/dyn/closer.cgi?action=download&filename=incubator/guacamole/0.9.10-incubating/source/guacamole-server-0.9.10-incubating.tar.gz |  | Used mostly to keep ugly URL out of the tasks, but also good if you need a different mirror  |
+| war_dl_url              | yes      | http://apache.org/dyn/closer.cgi?action=download&filename=incubator/guacamole/0.9.10-incubating/binary/guacamole-0.9.10-incubating.war |  | Used mostly to keep ugly URL out of the tasks, but also good if you need a different mirror  |
+| cors_allowed_origins         | yes      | *       |                   | Origins that Tomcat7 will allow HTTP requests to come from |
 | cors_filter             | yes      |         |                   | Large filter used with `blockinfile` to be added to Tomcat7 config |
+| https_cert             | no      | cert.pem   |                   | by default, this role creates a keypair, but this var allows users to include their own pair in `files/` |
+| https_key             | no      | key.pem   |                   | by default, this role creates a keypair, but this var allows users to include their own pair in `files/` |
 
 ---
 ### Authentication
