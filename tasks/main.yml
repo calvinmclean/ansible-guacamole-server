@@ -19,27 +19,6 @@
   include: web_client.yml
   tags: web_client
 
-- tags: hmac
-  block:
-    - name: Download guacamole-auth-hmac source
-      git:
-        clone: yes
-        dest: /tmp/guacamole-auth-hmac
-        repo: https://github.com/calvinmclean/guacamole-auth-hmac.git
-        force: yes
-
-    - name: Build the jar
-      command: mvn package
-      args:
-        chdir: /tmp/guacamole-auth-hmac
-        creates: /tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar
-
-    - name: Move hmac.jar to extensions directory
-      copy:
-        src: /tmp/guacamole-auth-hmac/target/guacamole-auth-hmac-0.9.10-incubating.jar
-        dest: "{{ GUACAMOLE_HOME }}/extensions/guacamole-auth-hmac-0.9.10-incubating.jar"
-        remote_src: yes
-
 - tags: ufw
   block:
     - name: Open ports
@@ -64,7 +43,6 @@
   with_items:
     - /tmp/guacamole-server.tar.gz
     - /tmp/guacamole-server-0.9.10-incubating
-    - /tmp/guacamole-auth-hmac
   ignore_errors: yes
   tags: cleanup
 

@@ -33,6 +33,17 @@
     path: "{{ GUACAMOLE_HOME }}/extensions"
     state: directory
 
+- name: Add CyVerse theme to Guacamole
+  copy:
+    src: files/cyverse-theme.jar
+    dest: "{{ GUACAMOLE_HOME }}/extensions"
+
+- name: Move HMAC authentication jar to extensions directory
+  copy:
+    src: files/hmac-0.9.10-incubating.jar
+    dest: "{{ GUACAMOLE_HOME }}/extensions"
+  tags: hmac
+
 - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
   template:
     src: guacamole.properties.j2
