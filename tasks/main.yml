@@ -1,9 +1,5 @@
 ---
 
-- name: Gather OS-specific variables
-  include_vars: "{{ ansible_distribution }}.yml"
-  tags: vars
-
 - name: Install pre-dependencies
   package:
     name: "{{ item }}"

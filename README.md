@@ -6,6 +6,8 @@ Current guacamole version: **0.9.10**
 
 Current tomcat version: **7**
 
+Works on: **Ubuntu 14.04** and **Ubuntu 16.04**
+
 ---
 ### Role variables
 | Variable                | Required | Default | Choices                   | Comments                                 |
