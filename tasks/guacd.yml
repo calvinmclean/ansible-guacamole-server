@@ -11,21 +11,14 @@
     name: libvncserver-dev
     state: present
 
-- name: Download Guacamole server
-  get_url:
-    url: "{{ server_dl_url }}"
-    dest: /tmp/guacamole-server.tar.gz
-    timeout: 30
-    checksum: "sha256:8c2e45012875f24e960c20915f21ebaf9423c302b85e403bd3b187ee4f3da4bf"
-  register: result
-  until: (result.msg.find("OK") == 0) or (result.msg.find("file already exists") == 0)
-  retries: 5
-  delay: 5
-  ignore_errors: yes
+- name: Copy guacd source
+  copy:
+    src: files/guacamole-server-0.9.10-incubating.tar.gz
+    dest: /tmp
 
-- name: Extract the guacamole-server source
+- name: Extract the guacd source
   unarchive:
-    src: /tmp/guacamole-server.tar.gz
+    src: /tmp/guacamole-server-0.9.10-incubating.tar.gz
     copy: no
     dest: /tmp
     creates: /tmp/guacamole-server-0.9.10-incubating
