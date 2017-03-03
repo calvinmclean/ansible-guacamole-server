@@ -37,15 +37,22 @@
 
 - tags: guacd_ssl
   block:
-    - name: Create self-signed SSL certs
+    - name: Create SSL certs directory
+      file:
+        path: /etc/private
+        state: directory
+        mode: 0700
+
+    - name: Create self-signed SSL cert and key
       command: >
         openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
       args:
-        chdir: /etc/guacamole
-        creates: /etc/guacamole/key.pem
+        chdir: /etc/private
+        creates: /etc/private/key.pem
 
-    - name: Add /etc/guacamole/guacd.conf w/ SSL paths
-      template:
-        src: guacd.conf.j2
-        dest: /etc/guacamole/guacd.conf
+    - name: Change permissions of SSL files
+      file:
+        path: "/etc/private/{{ item }}"
+        mode: 0600
+      with_items: [ 'cert.pem', 'key.pem' ]
   when: guacd_ssl == true

@@ -24,7 +24,7 @@ PACKAGES:
 
 # Variables for guacamole.properties
 guacd_port: 4822
-guacd_ssl: false
+guacd_ssl: true
 server_addr: localhost
 hmac_secret: secret
 hmac_age_limit: 600000

@@ -13,8 +13,8 @@ server {
 
   server_name {{ server_addr }};
 
-  ssl_certificate           /etc/nginx/{{ https_cert }};
-  ssl_certificate_key       /etc/nginx/{{ https_key }};
+  ssl_certificate           /etc/nginx/private/{{ https_cert }};
+  ssl_certificate_key       /etc/nginx/private/{{ https_key }};
 
   ssl on;
   ssl_session_cache  builtin:1000  shared:SSL:10m;

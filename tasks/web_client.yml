@@ -22,6 +22,12 @@
     dest: /etc/guacamole
     state: link
 
+- name: Add guacd.conf w/ SSL paths to GUACAMOLE_HOME
+  template:
+    src: guacd.conf.j2
+    dest: "{{ GUACAMOLE_HOME }}/guacd.conf"
+  when: guacd_ssl == true
+
 - name: Make GUACAMOLE_HOME/extensions directory
   file:
     path: "{{ GUACAMOLE_HOME }}/extensions"
@@ -70,24 +76,36 @@
         - /etc/nginx/sites-available/default
         - /etc/nginx/sites-enabled/default
 
+    - name: Create directory for SSL files
+      file:
+        path: /etc/nginx/private
+        state: directory
+        mode: 0700
+
     - name: Create self-signed SSL certs for HTTPS
-      command: openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+      command: >
+        openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
       args:
-        chdir: /etc/nginx
-        creates: /etc/nginx/key.pem
+        chdir: /etc/nginx/private
+        creates: /etc/nginx/private/key.pem
       when: (https_key == "key.pem") and (https_cert == "cert.pem")
 
-    - name: Copy SSL cert to /etc/nginx/
+    - name: Copy SSL files to /etc/nginx/
       copy:
-        src: files/"{{ https_cert }}"
-        dest: /etc/nginx/"{{ https_cert }}"
+        src: "files/{{ https_cert }}"
+        dest: "/etc/nginx/private/{{ https_cert }}"
       when: (https_key != "key.pem") and (https_cert != "cert.pem")
+      with_items:
+        - "{{ https_cert }}"
+        - "{{ https_key }}"
 
-    - name: Copy SSL key to /etc/nginx/
-      copy:
-        src: files/"{{ https_key }}"
-        dest: /etc/nginx/"{{ https_key }}"
-      when: (https_key != "key.pem") and (https_cert != "cert.pem")
+    - name: Change SSL file permissions
+      file:
+        path: "/etc/nginx/private/{{ item }}"
+        mode: 0600
+      with_items:
+        - "{{ https_cert }}"
+        - "{{ https_key }}"
 
 - tags: tomcat
   block:
