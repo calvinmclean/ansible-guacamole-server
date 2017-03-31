@@ -56,3 +56,10 @@ Guacamole does not currently support encrypted connections from RealVNC because 
     - ansible-guacamole-server
 ```
 ---
+### Guacamole on Atmosphere
+
+First, it is important to note that since Guacamole's VNC protocol does not support RealVNC encryption, the Guacamole server gateway should be on the same network as the instances in order to reduce exposure to the outside world.
+
+In order to make up for the lack of encryption, allocate a port, or a range of ports, that Guacamole will use to connect to `vncserver` (`5905`, for example). Then, since all connections will come from Guacamole, only allow the Guacamole server to access those ports.
+
+**WIP...**
