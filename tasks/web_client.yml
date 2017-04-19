@@ -55,8 +55,19 @@
     state: restarted
   changed_when: False
 
+
 - tags: reverse_proxy
   block:
+    - name: Get certbot auto
+      get_url:
+      dest: /tmp
+      url: https://dl.eff.org/certbot-auto
+      mode: a+x
+
+    - name: Use certbot-auto
+      command: >
+        /tmp/certbot-auto certonly --standalone -n --agree-tos --register-unsafely-without-email -d {{ ansible_fqdn }}
+
     - name: Add nginx reverse proxy config to sites-available
       template:
         src: nginx-guacamole.j2
@@ -75,37 +86,6 @@
       with_items:
         - /etc/nginx/sites-available/default
         - /etc/nginx/sites-enabled/default
-
-    - name: Create directory for SSL files
-      file:
-        path: /etc/nginx/private
-        state: directory
-        mode: 0700
-
-    - name: Create self-signed SSL certs for HTTPS
-      command: >
-        openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
-      args:
-        chdir: /etc/nginx/private
-        creates: /etc/nginx/private/key.pem
-      when: (https_key == "key.pem") and (https_cert == "cert.pem")
-
-    - name: Copy SSL files to /etc/nginx/
-      copy:
-        src: "files/{{ https_cert }}"
-        dest: "/etc/nginx/private/{{ https_cert }}"
-      when: (https_key != "key.pem") and (https_cert != "cert.pem")
-      with_items:
-        - "{{ https_cert }}"
-        - "{{ https_key }}"
-
-    - name: Change SSL file permissions
-      file:
-        path: "/etc/nginx/private/{{ item }}"
-        mode: 0600
-      with_items:
-        - "{{ https_cert }}"
-        - "{{ https_key }}"
 
 - tags: tomcat
   block:
