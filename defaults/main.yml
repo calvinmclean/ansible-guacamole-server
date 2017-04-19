@@ -2,26 +2,6 @@
 
 GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
 
-PACKAGES:
-  prep:
-    - software-properties-common
-    - git
-    - nginx
-    - openssl
-    - ufw
-  guacd:
-    - libcairo2-dev
-    - libjpeg62-dev
-    - libpng12-dev
-    - libpango1.0-dev
-    - libssh2-1-dev
-    - libssl-dev
-    - libossp-uuid-dev
-  web_client:
-    - tomcat7
-    - default-jdk
-    - maven
-
 # Variables for guacamole.properties
 guacd_port: 4822
 guacd_ssl: false
