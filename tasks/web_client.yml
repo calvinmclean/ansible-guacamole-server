@@ -60,9 +60,9 @@
   block:
     - name: Get certbot auto
       get_url:
-      dest: /tmp
-      url: https://dl.eff.org/certbot-auto
-      mode: a+x
+        dest: /tmp
+        url: https://dl.eff.org/certbot-auto
+        mode: a+x
 
     - name: Use certbot-auto
       command: >
