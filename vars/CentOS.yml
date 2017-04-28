@@ -13,8 +13,13 @@ PACKAGES:
     - pango-devel
     - libssh2-devel
     - openssl-devel
-    - libvncserver-devel
+    - libwebp-devel
+    - libvorbis-devel
+  vnc_lib: libvncserver-devel
   web_client:
-    - tomcat7
-    - default-jdk
-    - maven
+    - tomcat
+    - java-1.8.0-openjdk-src.x86_64
+
+tomcat_dir: /var/lib/tomcat/
+tomcat_service: tomcat
+nginx_dir: /usr/share/nginx/conf.d

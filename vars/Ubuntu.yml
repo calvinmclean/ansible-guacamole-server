@@ -15,8 +15,14 @@ PACKAGES:
     - libssh2-1-dev
     - libssl-dev
     - libossp-uuid-dev
-    - libvncserver-dev
+    - libwebp-dev
+    - libvorbis-dev
+  vnc_lib: libvncserver-dev
   web_client:
     - tomcat7
     - default-jdk
     - maven
+
+tomcat_dir: /var/lib/tomcat7
+tomcat_service: tomcat7
+nginx_dir: /etc/nginx/sites-available

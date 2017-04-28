@@ -8,7 +8,7 @@
 
 - name: Install libvncserver
   package:
-    name: libvncserver-dev
+    name: "{{ PACKAGES.vnc_lib }}"
     state: present
 
 - name: Copy guacd source

@@ -54,7 +54,7 @@
     name: "{{ item }}"
     state: restarted
     enabled: yes
-  with_items: [ tomcat7, guacd, nginx, ufw ]
+  with_items: [ "{{ tomcat_service }}", guacd, nginx, ufw ]
   ignore_errors: yes
   tags: restart
   changed_when: False

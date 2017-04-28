@@ -9,7 +9,7 @@
 - name: Copy web_client war
   copy:
     src: files/guacamole-0.9.10-incubating.war
-    dest: /var/lib/tomcat7/webapps/guacamole.war
+    dest: "{{ tomcat_dir }}/webapps/guacamole.war"
 
 - name: Make GUACAMOLE_HOME directory
   file:
@@ -51,7 +51,7 @@
 
 - name: Restart Tomcat7 so its files are accessible
   service:
-    name: tomcat7
+    name: "{{ tomcat_service }}"
     state: restarted
   changed_when: False
 
@@ -68,36 +68,37 @@
       command: >
         /tmp/certbot-auto certonly --standalone -n --agree-tos --register-unsafely-without-email -d {{ ansible_fqdn }}
 
-    - name: Add nginx reverse proxy config to sites-available
+    - name: Add nginx reverse proxy config to nginx
       template:
         src: nginx-guacamole.j2
-        dest: /etc/nginx/sites-available/nginx-guacamole
+        dest: "{{ nginx_dir }}/nginx-guacamole"
 
     - name: Create symbolic link for nginx config to sites-enabled
       file:
         src: /etc/nginx/sites-available/nginx-guacamole
         dest: /etc/nginx/sites-enabled/nginx-guacamole
         state: link
+      when: ansible_distribution == "Ubuntu"
 
-    - name: Remove sites-enabled and sites-available 'default' conf
+    - name: Remove nginx 'default' conf
       file:
         path: "{{ item }}"
         state: absent
       with_items:
         - /etc/nginx/sites-available/default
-        - /etc/nginx/sites-enabled/default
+        - /usr/share/nginx/conf.d/default.conf
 
 - tags: tomcat
   block:
     - name: Add CorsFilter to Tomcat7
       template:
         src: web.xml.j2
-        dest: /var/lib/tomcat7/webapps/guacamole/WEB-INF/web.xml
+        dest: "{{ tomcat_dir }}/webapps/guacamole/WEB-INF/web.xml"
         force: yes
 
     - name: Set Tomcat7 port
       lineinfile:
-        dest: /var/lib/tomcat7/conf/server.xml
+        dest: "{{ tomcat_dir }}/conf/server.xml"
         state: present
         regexp: <Connector port="8080" protocol="HTTP/1.1"
         line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'
