@@ -98,7 +98,7 @@
 
     - name: Set Tomcat7 port
       lineinfile:
-        dest: "{{ tomcat_dir }}/conf/server.xml"
+        dest: "{{ tomcat_conf }}"
         state: present
         regexp: <Connector port="8080" protocol="HTTP/1.1"
         line: '    <Connector port="{{ tomcat_port }}" protocol="HTTP/1.1"'

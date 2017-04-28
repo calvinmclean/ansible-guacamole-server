@@ -1,6 +1,6 @@
 ---
 
-GUACAMOLE_HOME: /usr/share/tomcat7/.guacamole
+GUACAMOLE_HOME: "/usr/share/{{ tomcat_service }}/.guacamole"
 
 # Variables for guacamole.properties
 guacd_port: 4822

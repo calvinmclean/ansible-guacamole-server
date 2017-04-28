@@ -23,5 +23,6 @@ PACKAGES:
     - nginx
 
 tomcat_dir: /var/lib/tomcat7
+tomcat_conf: /var/lib/tomcat7/conf/server.xml
 tomcat_service: tomcat7
 nginx_dir: /etc/nginx/sites-available

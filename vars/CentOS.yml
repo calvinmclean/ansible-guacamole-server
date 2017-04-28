@@ -5,6 +5,7 @@ PACKAGES:
     - epel-release
     - git
     - openssl
+    - gcc
   guacd:
     - cairo-devel
     - libjpeg-devel
@@ -21,6 +22,7 @@ PACKAGES:
     - java-1.8.0-openjdk-src.x86_64
     - nginx
 
-tomcat_dir: /var/lib/tomcat/
+tomcat_dir: /var/lib/tomcat
+tomcat_conf: /etc/tomcat/server.xml
 tomcat_service: tomcat
-nginx_dir: /usr/share/nginx/conf.d
+nginx_dir: /etc/nginx/conf.d
