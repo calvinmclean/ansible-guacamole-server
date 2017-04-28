@@ -2,6 +2,7 @@
 
 PACKAGES:
   prep:
+    - epel-release
     - git
     - nginx
     - openssl

@@ -70,13 +70,13 @@
 
     - name: Add nginx reverse proxy config to nginx
       template:
-        src: nginx-guacamole.j2
-        dest: "{{ nginx_dir }}/nginx-guacamole"
+        src: nginx-guacamole.conf.j2
+        dest: "{{ nginx_dir }}/nginx-guacamole.conf"
 
     - name: Create symbolic link for nginx config to sites-enabled
       file:
-        src: /etc/nginx/sites-available/nginx-guacamole
-        dest: /etc/nginx/sites-enabled/nginx-guacamole
+        src: /etc/nginx/sites-available/nginx-guacamole.conf
+        dest: /etc/nginx/sites-enabled/nginx-guacamole.conf
         state: link
       when: ansible_distribution == "Ubuntu"
 
