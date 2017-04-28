@@ -4,7 +4,6 @@ PACKAGES:
   prep:
     - software-properties-common
     - git
-    - nginx
     - openssl
     - ufw
   guacd:
@@ -21,7 +20,7 @@ PACKAGES:
   web_client:
     - tomcat7
     - default-jdk
-    - maven
+    - nginx
 
 tomcat_dir: /var/lib/tomcat7
 tomcat_service: tomcat7

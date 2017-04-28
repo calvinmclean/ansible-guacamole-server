@@ -4,7 +4,6 @@ PACKAGES:
   prep:
     - epel-release
     - git
-    - nginx
     - openssl
   guacd:
     - cairo-devel
@@ -20,6 +19,7 @@ PACKAGES:
   web_client:
     - tomcat
     - java-1.8.0-openjdk-src.x86_64
+    - nginx
 
 tomcat_dir: /var/lib/tomcat/
 tomcat_service: tomcat
