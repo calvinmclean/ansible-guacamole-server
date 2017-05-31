@@ -40,7 +40,7 @@
 
 - name: Move HMAC authentication jar to extensions directory
   copy:
-    src: files/guacamole-auth-hmac-{{ guacamole_version }}.jar
+    src: "files/guacamole-auth-hmac-{{ guacamole_version }}.jar"
     dest: "{{ GUACAMOLE_HOME }}/extensions"
   tags: hmac
 
