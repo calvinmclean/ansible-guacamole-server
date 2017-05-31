@@ -8,7 +8,7 @@
 
 - name: Copy web_client war
   copy:
-    src: files/guacamole-0.9.10-incubating.war
+    src: "files/guacamole-{{ guacamole_version }}.war"
     dest: "{{ tomcat_dir }}/webapps/guacamole.war"
 
 - name: Make GUACAMOLE_HOME directory
@@ -40,7 +40,7 @@
 
 - name: Move HMAC authentication jar to extensions directory
   copy:
-    src: files/hmac-0.9.10-incubating.jar
+    src: files/guacamole-auth-hmac-{{ guacamole_version }}.jar
     dest: "{{ GUACAMOLE_HOME }}/extensions"
   tags: hmac
 

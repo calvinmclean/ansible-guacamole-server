@@ -21,3 +21,5 @@ cors_allowed_origins: "*"
 # Cert/key pair to use for Nginx HTTPS
 https_cert: cert.pem
 https_key: key.pem
+
+guacamole_version: 0.9.12-incubating
