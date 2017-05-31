@@ -13,20 +13,20 @@
 
 - name: Copy guacd source
   copy:
-    src: files/guacamole-server-0.9.10-incubating.tar.gz
+    src: "files/guacamole-server-{{ guacamole_version }}.tar.gz"
     dest: /tmp
 
 - name: Extract the guacd source
   unarchive:
-    src: /tmp/guacamole-server-0.9.10-incubating.tar.gz
+    src: "/tmp/guacamole-server-{{ guacamole_version }}.tar.gz"
     copy: no
     dest: /tmp
-    creates: /tmp/guacamole-server-0.9.10-incubating
+    creates: "/tmp/guacamole-server-{{ guacamole_version }}"
 
 - name: Build guacamole-server from source
   command: "{{ item }}"
   args:
-    chdir: /tmp/guacamole-server-0.9.10-incubating
+    chdir: "/tmp/guacamole-server-{{ guacamole_version }}"
     creates: /usr/local/sbin/guacd
   with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
   register: guacd_build

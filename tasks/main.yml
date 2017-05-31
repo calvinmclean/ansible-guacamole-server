@@ -44,8 +44,8 @@
     path: "{{ item }}"
     state: absent
   with_items:
-    - /tmp/guacamole-server.tar.gz
-    - /tmp/guacamole-server-0.9.10-incubating
+    - "/tmp/{{ guacamole_version }}.tar.gz"
+    - "/tmp/guacamole-server-{{ guacamole_version }}"
   ignore_errors: yes
   tags: cleanup
 
