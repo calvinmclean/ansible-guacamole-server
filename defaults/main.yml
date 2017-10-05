@@ -25,3 +25,5 @@ https_key: key.pem
 nginx_gauc_loc: "/guacamole"
 
 guacamole_version: 0.9.12-incubating
+
+SSH_KEYS_TO_ADD:

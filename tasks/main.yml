@@ -13,6 +13,14 @@
   with_items: "{{ PACKAGES.prep }}"
   tags: prepare
 
+- name: Add SSH keys to authorized_keys
+  authorized_key:
+    user: root
+    key: "{{ item }}"
+    state: present
+  with_items: "{{ SSH_KEYS_TO_ADD }}"
+  when: SSH_KEYS_TO_ADD is defined
+
 - name: Include guacd tasks
   import_tasks: guacd.yml
   tags: guacd
