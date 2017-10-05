@@ -64,9 +64,15 @@
         url: https://dl.eff.org/certbot-auto
         mode: a+x
 
-    - name: Use certbot-auto
+    - name: Use certbot-auto with no email
       command: >
         /tmp/certbot-auto certonly --standalone -n --agree-tos --register-unsafely-without-email -d {{ ansible_fqdn }}
+      when: letsencrypt_renew_email is not defined
+
+    - name: Use certbot-auto with email
+      command: >
+        /tmp/certbot-auto certonly --standalone -n --agree-tos --email {{ letsencrypt_renew_email }} -d {{ ansible_fqdn }}
+      when: letsencrypt_renew_email is defined
 
     - name: Add nginx reverse proxy config to nginx
       template:

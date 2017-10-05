@@ -26,6 +26,7 @@ Works on: **Ubuntu 14.04** and **Ubuntu 16.04**
 | war_dl_url              | yes      | http://apache.org/dyn/closer.cgi?action=download&filename=incubator/guacamole/0.9.10-incubating/binary/guacamole-0.9.10-incubating.war |  | Used mostly to keep ugly URL out of the tasks, but also good if you need a different mirror  |
 | cors_allowed_origins         | yes      | *       |                   | Origins that Tomcat7 will allow HTTP requests to come from |
 | cors_filter             | yes      |         |                   | Large filter used with `blockinfile` to be added to Tomcat7 config |
+| letsencrypt_renew_email | no       |         |                   | Email to give to Let's Encrypt for certificate renewal |
 | SSH_KEYS_TO_ADD         | no       |         |                   | List of public keys to add to root's authorized_keys |
 
 ---

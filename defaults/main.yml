@@ -18,12 +18,9 @@ nginx_https_port: 443
 # CORS
 cors_allowed_origins: "*"
 
-# Cert/key pair to use for Nginx HTTPS
-https_cert: cert.pem
-https_key: key.pem
-
 nginx_gauc_loc: "/guacamole"
 
 guacamole_version: 0.9.12-incubating
 
+letsencrypt_renew_email:
 SSH_KEYS_TO_ADD:
