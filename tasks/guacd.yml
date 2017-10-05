@@ -45,14 +45,14 @@
 
     - name: Create self-signed SSL cert and key
       command: >
-        openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout key.pem -out cert.pem
+        openssl req -new -nodes -x509 -subj "/C=US" -days 365 -newkey rsa:4096 -keyout guac_key.pem -out guac_cert.pem
       args:
         chdir: /etc/private
-        creates: /etc/private/key.pem
+        creates: /etc/private/guac_key.pem
 
     - name: Change permissions of SSL files
       file:
         path: "/etc/private/{{ item }}"
         mode: 0600
-      with_items: [ 'cert.pem', 'key.pem' ]
+      with_items: [ 'guac_cert.pem', 'guac_key.pem' ]
   when: guacd_ssl == true
