@@ -14,11 +14,11 @@
   tags: prepare
 
 - name: Include guacd tasks
-  include: guacd.yml
+  import_tasks: guacd.yml
   tags: guacd
 
 - name: Include web_client tasks
-  include: web_client.yml
+  import_tasks: web_client.yml
   tags: web_client
 
 - tags: ufw
