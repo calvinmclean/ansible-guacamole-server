@@ -22,5 +22,5 @@ nginx_gauc_loc: "/guacamole"
 
 guacamole_version: 0.9.12-incubating
 
-letsencrypt_renew_email:
-SSH_KEYS_TO_ADD:
+letsencrypt_renew_email: ""
+SSH_KEYS_TO_ADD: ""

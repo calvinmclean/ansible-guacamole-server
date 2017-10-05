@@ -22,10 +22,6 @@ server {
   ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
   ssl_prefer_server_ciphers on;
 
-  location / {
-    try_files $uri $uri/ =404;
-  }
-
   location {{ nginx_gauc_loc }}/ {
     proxy_pass http://{{ server_addr }}:{{ tomcat_port }}/guacamole/;
     proxy_buffering off;
