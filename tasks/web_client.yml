@@ -55,6 +55,14 @@
     src: guacamole.properties.j2
     dest: "{{ GUACAMOLE_HOME }}/guacamole.properties"
 
+- name: Ensure correct permissions in GUACAMOLE_HOME
+  file:
+    path: "{{ GUACAMOLE_HOME }}"
+    owner: tomcat7
+    group: tomcat7
+    recursive: yes
+    state: directory
+
 - name: Restart Tomcat7 so its files are accessible
   service:
     name: "{{ tomcat_service }}"
