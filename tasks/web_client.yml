@@ -39,9 +39,9 @@
     state: directory
     mode: 0755
 
-- name: Add CyVerse theme to Guacamole
+- name: Add theme extension to Guacamole
   copy:
-    src: files/cyverse-theme.jar
+    src: "files/{{ install_type }}-theme.jar"
     dest: "{{ GUACAMOLE_HOME }}/extensions"
 
 - name: Move HMAC authentication jar to extensions directory

@@ -24,3 +24,4 @@ guacamole_version: 0.9.12-incubating
 
 letsencrypt_renew_email: ""
 SSH_KEYS_TO_ADD: ""
+install_type: "cyverse"
