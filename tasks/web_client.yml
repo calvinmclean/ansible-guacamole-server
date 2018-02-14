@@ -33,6 +33,12 @@
     path: "{{ GUACAMOLE_HOME }}/extensions"
     state: directory
 
+- name: Make GUACAMOLE_HOME/keys directory
+  file:
+    path: "{{ GUACAMOLE_HOME }}/extensions"
+    state: directory
+    mode: 0755
+
 - name: Add CyVerse theme to Guacamole
   copy:
     src: files/cyverse-theme.jar
