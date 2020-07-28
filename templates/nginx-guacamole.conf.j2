@@ -13,8 +13,8 @@ server {
 
   server_name {{ server_addr }};
 
-  ssl_certificate           /etc/letsencrypt/live/{{ ansible_fqdn }}/fullchain.pem;
-  ssl_certificate_key       /etc/letsencrypt/live/{{ ansible_fqdn }}/privkey.pem;
+  ssl_certificate           {{ ssl_cert_path }};
+  ssl_certificate_key       {{ ssl_key_path }};
 
   ssl on;
   ssl_session_cache  builtin:1000  shared:SSL:10m;
@@ -23,7 +23,7 @@ server {
   ssl_prefer_server_ciphers on;
 
   location {{ nginx_gauc_loc }}/ {
-    proxy_pass http://{{ server_addr }}:{{ tomcat_port }}/guacamole/;
+    proxy_pass http://{{ guacamole_addr }}:8080/guacamole/;
     proxy_buffering off;
     proxy_http_version 1.1;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

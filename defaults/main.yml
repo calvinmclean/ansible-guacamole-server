@@ -1,27 +1,32 @@
 ---
 
-GUACAMOLE_HOME: "/usr/share/{{ tomcat_service }}/.guacamole"
+CONFIG_DIR: "/opt"
+NGINX_DIR: "/opt/nginx"
+GUACAMOLE_DIR: "/opt/guacamole"
+
+install_type: "cyverse"
+guacamole_version: 1.0.0
 
 # Variables for guacamole.properties
 guacd_port: 4822
 guacd_ssl: false
-server_addr: localhost
-hmac_secret: secret
-hmac_age_limit: 600000
+guacd_hostname: guacd
+secret_key: secret
+timestamp_age_limit: 600000
+key_directory: "{{ GUACAMOLE_DIR }}/keys"
+use_local_privkey: true
+
+# Variables for guacd
+GUACD_LOG_LEVEL: info
 
 # System ports
 ssh_port: 22
-tomcat_port: 8080
 nginx_port: 80
 nginx_https_port: 443
 
-# CORS
-cors_allowed_origins: "*"
-
-nginx_gauc_loc: "/guacamole"
-
-guacamole_version: 0.9.12-incubating
-
-letsencrypt_renew_email: ""
-SSH_KEYS_TO_ADD: ""
-install_type: "cyverse"
+# Nginx
+server_addr: localhost
+guacamole_addr: guacamole
+nginx_gauc_loc: "/"
+ssl_cert_path: "{{ NGINX_DIR }}/fullchain.pem"
+ssl_key_path: "{{ NGINX_DIR }}/privkey.pem"

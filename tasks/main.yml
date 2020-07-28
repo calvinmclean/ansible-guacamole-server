@@ -1,68 +1,57 @@
 ---
 
-- name: Gather OS specific variables
-  include_vars: "{{ item }}"
-  with_first_found:
-    - "{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml"
-    - "{{ ansible_distribution }}.yml"
+- name: Open UFW ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    state: enabled
+  with_items:
+    - "{{ nginx_port }}"
+    - "{{ nginx_https_port }}"
+    - "{{ ssh_port }}"
 
-- name: Install pre-dependencies
-  package:
-    name: "{{ item }}"
-    state: present
-  with_items: "{{ PACKAGES.prep }}"
-  tags: prepare
-
-- name: Add SSH keys to authorized_keys
-  authorized_key:
-    user: root
-    key: "{{ item }}"
-    state: present
-  with_items: "{{ SSH_KEYS_TO_ADD }}"
-  when: SSH_KEYS_TO_ADD is defined
-
-- name: Include guacd tasks
-  import_tasks: guacd.yml
-  tags: guacd
-
-- name: Include web_client tasks
-  import_tasks: web_client.yml
-  tags: web_client
-
-- tags: ufw
-  block:
-    - name: Open ports
-      ufw:
-        rule: allow
-        port: "{{ item }}"
-        state: enabled
-      with_items:
-        - "{{ nginx_port }}"
-        - "{{ nginx_https_port }}"
-        - "{{ ssh_port }}"
-
-    - name: Close Tomcat7 port
-      ufw:
-        rule: deny
-        port: "{{ tomcat_port }}"
-  when: ansible_distribution == "Ubuntu"
-
-- name: Cleanup temp files
+- name: Prepare config directories
   file:
     path: "{{ item }}"
-    state: absent
-  with_items:
-    - "/tmp/{{ guacamole_version }}.tar.gz"
-    - "/tmp/guacamole-server-{{ guacamole_version }}"
-  ignore_errors: yes
-  tags: cleanup
+    state: directory
+  loop:
+    - "{{ CONFIG_DIR }}"
+    - "{{ NGINX_DIR }}"
+    - "{{ GUACAMOLE_DIR }}"
+    - "{{ key_directory }}"
+    - "{{ GUACAMOLE_DIR }}/extensions"
 
-- name: restart services (tomcat,guacd,nginx,ufw)
-  service:
-    name: "{{ item }}"
-    state: restarted
-    enabled: yes
-  with_items: [ "{{ tomcat_service }}", guacd, nginx, ufw ]
-  ignore_errors: yes
-  tags: restart
-  changed_when: False
+- name: Fill out Nginx template
+  template:
+    src: "nginx-guacamole.conf.j2"
+    dest: "{{ NGINX_DIR }}/nginx-guacamole.conf"
+
+- name: Fill out guacamole.properties template
+  template:
+    src: "guacamole.properties"
+    dest: "{{ GUACAMOLE_DIR }}/guacamole.properties"
+
+- name: Download theme file to extensions directory
+  get_url:
+    url: "https://github.com/cyverse/guac-cyverse-theme/releases/download/{{ install_type }}-theme/{{ install_type }}-theme.jar"
+    dest: "{{ GUACAMOLE_DIR }}/extensions/{{ install_type }}-theme.jar"
+
+- name: Download authentication plugin
+  get_url:
+    url: "https://github.com/cyverse/guacamole-auth-hmac/releases/download/{{ guacamole_version }}/guacamole-auth-hmac-{{ guacamole_version }}.jar"
+    dest: "{{ GUACAMOLE_DIR }}/extensions/guacamole-auth-hmac-{{ guacamole_version }}.jar"
+
+- name: Fill out docker-compose template
+  template:
+    src: "docker-compose.yml.j2"
+    dest: "{{ CONFIG_DIR }}/docker-compose.yml"
+
+- name: Get certbot auto
+  get_url:
+    dest: /tmp
+    url: https://dl.eff.org/certbot-auto
+    mode: a+x
+
+- name: Use certbot-auto with no email
+  command: >
+    /tmp/certbot-auto certonly --standalone -n --agree-tos --register-unsafely-without-email -d {{ ansible_fqdn }}

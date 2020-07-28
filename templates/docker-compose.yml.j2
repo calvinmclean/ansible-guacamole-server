@@ -1,0 +1,22 @@
+---
+version: '3'
+
+services:
+
+  guacamole:
+    image: 'guacamole/guacamole:{{ guacamole_version }}'
+    environment:
+      GUACAMOLE_HOME: '/config'
+      GUACD_HOSTNAME: 'guacd'
+    volumes:
+      - '{{ GUACAMOLE_DIR }}:/config:rw'
+
+  guacd:
+    image: 'guacamole/guacd:{{ guacamole_version }}'
+    environment:
+      GUACD_LOG_LEVEL: "{{ GUACD_LOG_LEVEL }}"
+
+  nginx:
+    image: 'nginx:latest'
+    volumes:
+      - '{{ NGINX_DIR }}:/etc/nginx:rw'
