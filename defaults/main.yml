@@ -1,8 +1,8 @@
 ---
 
-CONFIG_DIR: "/opt"
-NGINX_DIR: "/opt/nginx"
-GUACAMOLE_DIR: "/opt/guacamole"
+CONFIG_DIR: "/opt/guacamole"
+NGINX_DIR: "{{ CONFIG_DIR }}/nginx"
+GUACAMOLE_DIR: "{{ CONFIG_DIR }}/guacamole"
 
 install_type: "cyverse"
 guacamole_version: 1.0.0
@@ -28,5 +28,10 @@ nginx_https_port: 443
 server_addr: localhost
 guacamole_addr: guacamole
 nginx_gauc_loc: "/"
-ssl_cert_path: "{{ NGINX_DIR }}/fullchain.pem"
-ssl_key_path: "{{ NGINX_DIR }}/privkey.pem"
+ssl_cert_name: "fullchain.pem"
+ssl_key_name: "privkey.pem"
+# define this variable if you have your own cert/key to use
+# if you use a relative path, you must specify "." at the beginning of it
+# because the tasks will use "{{ local_ssl_path }}/{{ item }}" for the cert/key
+# relative paths are relative to wherever the playbook command is run from
+# local_ssl_path: "./files"

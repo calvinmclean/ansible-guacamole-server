@@ -19,4 +19,7 @@ services:
   nginx:
     image: 'nginx:latest'
     volumes:
-      - '{{ NGINX_DIR }}:/etc/nginx:rw'
+      - '{{ NGINX_DIR }}:/etc/nginx/conf.d:rw'
+    ports:
+      - "{{ nginx_port }}:{{ nginx_port }}"
+      - "{{ nginx_https_port }}:{{ nginx_https_port }}"

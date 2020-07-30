@@ -1,14 +1,26 @@
 ---
 
+- name: SHELL; download docker-compose via url
+  become: true
+  shell: curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  args:
+    creates: /usr/local/bin/docker-compose
+
+- name: FILE; change mode for /usr/local/bin/docker-compose
+  become: true
+  file:
+    path: /usr/local/bin/docker-compose
+    mode: '0755'
+
 - name: Open UFW ports
   ufw:
     rule: allow
     port: "{{ item }}"
     state: enabled
   with_items:
-    - "{{ nginx_port }}"
-    - "{{ nginx_https_port }}"
-    - "{{ ssh_port }}"
+    - "\"{{ nginx_port }}\""
+    - "\"{{ nginx_https_port }}\""
+    - "\"{{ ssh_port }}\""
 
 - name: Prepare config directories
   file:
@@ -28,7 +40,7 @@
 
 - name: Fill out guacamole.properties template
   template:
-    src: "guacamole.properties"
+    src: "guacamole.properties.j2"
     dest: "{{ GUACAMOLE_DIR }}/guacamole.properties"
 
 - name: Download theme file to extensions directory
@@ -46,12 +58,50 @@
     src: "docker-compose.yml.j2"
     dest: "{{ CONFIG_DIR }}/docker-compose.yml"
 
-- name: Get certbot auto
-  get_url:
-    dest: /tmp
-    url: https://dl.eff.org/certbot-auto
-    mode: a+x
+- block:
+  - name: Get certbot auto
+    get_url:
+      dest: /tmp
+      url: https://dl.eff.org/certbot-auto
+      mode: a+x
 
-- name: Use certbot-auto with no email
-  command: >
-    /tmp/certbot-auto certonly --standalone -n --agree-tos --register-unsafely-without-email -d {{ ansible_fqdn }}
+  - name: Use certbot-auto with no email
+    command: >
+      /tmp/certbot-auto certonly --standalone -n --agree-tos --register-unsafely-without-email -d {{ ansible_fqdn }}
+
+  - name: copy SSL files to path
+    copy:
+      src: "/etc/letsencrypt/live/{{ ansible_fqdn }}/{{ item }}"
+      dest: "{{ NGINX_DIR }}/{{ item }}"
+      remote_src: true
+    loop:
+      - "{{ ssl_cert_name }}"
+      - "{{ ssl_key_name }}"
+  when: local_ssl_path is not defined
+
+- name: copy over SSL files
+  copy:
+    src: "{{ local_ssl_path }}/{{ item }}"
+    dest: "{{ NGINX_DIR }}/{{ item }}"
+  loop:
+    - "{{ ssl_cert_name }}"
+    - "{{ ssl_key_name }}"
+  when: local_ssl_path is defined
+
+- name: copy over Guacamole systemd file
+  template:
+    src: "guacamole.service.j2"
+    dest: "{{ CONFIG_DIR }}/guacamole.service"
+
+- name: create symlink from systemd file to correct directory
+  file:
+    src: "{{ CONFIG_DIR }}/guacamole.service"
+    dest: "/etc/systemd/system/guacamole.service"
+    state: link
+
+- name: enable and start guacamole service
+  systemd:
+    name: guacamole.service
+    daemon_reload: yes
+    enabled: yes
+    state: restarted
