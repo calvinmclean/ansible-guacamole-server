@@ -5,19 +5,17 @@ NGINX_DIR: "{{ CONFIG_DIR }}/nginx"
 GUACAMOLE_DIR: "{{ CONFIG_DIR }}/guacamole"
 
 install_type: "cyverse"
-guacamole_version: 1.0.0
+guacamole_version: "1.0.0"
 
 # Variables for guacamole.properties
-guacd_port: 4822
 guacd_ssl: false
-guacd_hostname: guacd
-secret_key: secret
+secret_key: "secret"
 timestamp_age_limit: 600000
 key_directory: "{{ GUACAMOLE_DIR }}/keys"
 use_local_privkey: true
 
 # Variables for guacd
-GUACD_LOG_LEVEL: info
+GUACD_LOG_LEVEL: "info"
 
 # System ports
 ssh_port: 22
@@ -25,9 +23,8 @@ nginx_port: 80
 nginx_https_port: 443
 
 # Nginx
-server_addr: localhost
-guacamole_addr: guacamole
-nginx_gauc_loc: "/"
+server_addr: "localhost"
+proxy_path: "/"
 ssl_cert_name: "fullchain.pem"
 ssl_key_name: "privkey.pem"
 # define this variable if you have your own cert/key to use

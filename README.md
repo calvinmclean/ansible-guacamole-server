@@ -1,65 +1,70 @@
 # ansible-guacamole-server
+This role will install and configure Guacamole for CyVerse using Docker Compose.
 
-*Master:* [![Build Status](https://travis-ci.org/calvinmclean/ansible-guacamole-server.svg?branch=master)](https://travis-ci.org/calvinmclean/ansible-guacamole-server) *Dev:* [![Build Status](https://travis-ci.org/calvinmclean/ansible-guacamole-server.svg?branch=dev)](https://travis-ci.org/calvinmclean/ansible-guacamole-server)
 
-Current guacamole version: **0.9.10**
-
-Current tomcat version: **7**
-
-Works on: **Ubuntu 14.04** and **Ubuntu 16.04**
-
----
 ### Role variables
-| Variable                | Required | Default | Choices                   | Comments                                 |
-|-------------------------|----------|---------|---------------------------|------------------------------------------|
-| GUACAMOLE_HOME          | yes      | /usr/share/tomcat7/.guacamole |                | [Read this if you want to move `GUACAMOLE_HOME`](http://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html)|
-| guacd_port              | yes      | 4822    | any port                  | used in `guacamole.properties` template   |
-| guacd_ssl               | yes      | false    | true, false               | used in `guacamole.properties` template. Also enables extra tasks to configure SSL |
-| server_addr             | yes      | localhost  | hostname of the server | used in `guacamole.properties`|
-| hmac_secret             | yes      | secret  | any string                | HMAC auth relies on this, so make it good!                         |
-| hmac_age_limit          | yes      | 600,000 milliseconds | time in seconds   | used in `gucamole.properties` template to set how long a generated URL is valid|
-| ssh_port                | yes      | 22      | any port                  | Port used to SSH to the server so that UFW allows it   |
-| tomcat_port             | yes      | 8080    | any port                  | Port used by Tomcat7 servlet   |
-| nginx_port              | yes      | 80      | any port                  | Port used by Nginx for HTTP (only changed in weird circumstances)   |
-| nginx_https_port        | yes      | 443     | any port                  | Port used by Nginx for HTTPS (only changed in weird circumstances)   |
-| server_dl_url           | yes      | http://apache.org/dyn/closer.cgi?action=download&filename=incubator/guacamole/0.9.10-incubating/source/guacamole-server-0.9.10-incubating.tar.gz |  | Used mostly to keep ugly URL out of the tasks, but also good if you need a different mirror  |
-| war_dl_url              | yes      | http://apache.org/dyn/closer.cgi?action=download&filename=incubator/guacamole/0.9.10-incubating/binary/guacamole-0.9.10-incubating.war |  | Used mostly to keep ugly URL out of the tasks, but also good if you need a different mirror  |
-| cors_allowed_origins         | yes      | *       |                   | Origins that Tomcat7 will allow HTTP requests to come from |
-| cors_filter             | yes      |         |                   | Large filter used with `blockinfile` to be added to Tomcat7 config |
-| letsencrypt_renew_email | no       |         |                   | Email to give to Let's Encrypt for certificate renewal |
-| SSH_KEYS_TO_ADD         | no       |         |                   | List of public keys to add to root's authorized_keys |
+| Variable              | Default                        | Description |
+|-----------------------|--------------------------------|-------------|
+| `CONFIG_DIR`          | `"/opt/guacamole"`             | this is the root of everything that will be configured on the target |
+| `NGINX_DIR`           | `"{{ CONFIG_DIR }}/nginx"`     | this is where we will setup Nginx configs and keys |
+| `GUACAMOLE_DIR`       | `"{{ CONFIG_DIR }}/guacamole"` | this is where we will setup all Guacamole configs |
+| `install_type`        | `"cyverse"`                    | this determines which theme extension to use. Can be: `"cyverse"`, `"jetstream"` |
+| `guacamole_version`   | `"1.0.0"`                      | used to tag Guacamole images and download authentication plugin |
+| `guacd_ssl`           | `false`                        | used in `guacamole.properties` template. Also enables extra tasks to configure SSL |
+| `secret_key`          | `"secret"`                     | HMAC auth relies on this, so make it good! |
+| `timestamp_age_limit` | `600000`                       | used in `gucamole.properties` template to set how long a generated URL is valid (in milliseconds) |
+| `key_directory`       | `"{{ GUACAMOLE_DIR }}/keys"`   | this is where we store user keypairs for SSH connections |
+| `use_local_privkey`   | `true`                         | determine if the authentication plugin should look for SSH keys on local filesystem |
+| `GUACD_LOG_LEVEL`     | `"info"`                       | logging level for `guacd` container. Can be one of: `"trace"`, `"debug"`, `"info"`, `"warning"`, `"error"` |
+| `ssh_port`            | `22`                           | Port used to SSH to the server so that UFW allows it |
+| `nginx_port`          | `80`                           | Port used by Nginx for HTTP |
+| `nginx_https_port`    | `443`                          | Port used by Nginx for HTTPS |
+| `server_addr`         | `"localhost"`                  | used in Nginx configuration |
+| `proxy_path`          | `"/"`                          | path to use in URL for proxying to Guacamole container |
+| `ssl_cert_name`       | `"fullchain.pem"`              | name of the SSL certificate to be used for copying files and Nginx config |
+| `ssl_key_name`        | `"privkey.pem"`                | name of the SSL keyfile to be used for copying files and Nginx config |
+| `local_ssl_path`      | undefined                      | local path to point to user-provided SSL files. If it is a relative path, start with "." |
 
----
-### Authentication
-[Guacamole authentication is performed with HMAC](https://github.com/calvinmclean/guacamole-auth-hmac). This allows connections to be accessed without user accounts. The code for HMAC includes form.php that will send the authentication information as a POST request and redirect the user to their connection with the returned authToken. The URL looks like:
 
-`http://localhost:8888/guacamole/#/client/ZjA4YzRlLWM3MWUtNDE1OC05MTNkLTlkYjRlNzEyYmJkNwBjAGhtYWM=?token=bd786cd40e307d5c5b14bde0dc5fffcd9f797cfb64ae0c1947c247054d80efac`
+## Usage
+1. Download this repository
+    ```bash
+    git clone https://github.com/CyVerse-Ansible/ansible-guacamole-server.git
+    ```
 
-Read more about this in **[HMAC-README.md](https://github.com/calvinmclean/guacamole-auth-hmac)**
+2. Install requirements
+    ```bash
+    ansible-galaxy role install -r ansible-guacamole-server/requirements.yml
+    ```
 
-#### SSH
-SSH is authenticated using the users' Unix usernames and passwords as they would normally.
+3. Create `playbook.yml`
+    ```yaml
+    - hosts: guac-server
+      vars_files:
+        - config.yml
+      roles:
+        - docker
+        - ansible-guacamole-server
+    ```
 
-SSH can be authenticated using a keypair. The server would have its RSA private key and each VM would have the public key added during setup.
+4. Create `hosts.yml`
+    ```yaml
+    all:
+      hosts:
+        guac-server:
+          ansible_host: localhost
+          ansible_user: root
+    ```
 
-#### VNC
-VNC is authenticated using the VNC password that is set during VNC server setup on the client VM.
+5. Create `config.yml` (these are commonly-overridden variables)
+    ```yaml
+    server_addr: guacamole.cyverse.org
+    local_ssl_path: "./files"
+    ssl_cert_name: "cyverse.org.pem"
+    ssl_key_name: "cyverse.key"
+    ```
 
-Guacamole does not currently support encrypted connections from RealVNC because it is a non-standard VNC feature. Guacamole developers want to add this feature, but there is no expected release, and it will probably be a while.
-
----
-### Example Playbook
-```
-- hosts: guac-server
-  remote_user: root
-  roles:
-    - ansible-guacamole-server
-```
----
-### Guacamole on Atmosphere
-
-First, it is important to note that since Guacamole's VNC protocol does not support RealVNC encryption, the Guacamole server gateway should be on the same network as the instances in order to reduce exposure to the outside world.
-
-In order to make up for the lack of encryption, allocate a port, or a range of ports, that Guacamole will use to connect to `vncserver` (`5905`, for example). Then, since all connections will come from Guacamole, only allow the Guacamole server to access those ports.
-
-**WIP...**
+6. Run it!
+    ```bash
+    ansible-playbook -i hosts.yml playbook.yml
+    ```
