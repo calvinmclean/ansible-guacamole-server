@@ -6,10 +6,10 @@ services:
   guacamole:
     image: 'guacamole/guacamole:{{ guacamole_version }}'
     environment:
-      GUACAMOLE_HOME: '/config'
+      GUACAMOLE_HOME: '{{ GUACAMOLE_HOME }}'
       GUACD_HOSTNAME: 'guacd'
     volumes:
-      - '{{ GUACAMOLE_DIR }}:/config:rw'
+      - '{{ GUACAMOLE_DIR }}:{{ GUACAMOLE_HOME }}:rw'
 
   guacd:
     image: 'guacamole/guacd:{{ guacamole_version }}'

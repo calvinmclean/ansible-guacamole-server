@@ -4,6 +4,9 @@ CONFIG_DIR: "/opt/guacamole"
 NGINX_DIR: "{{ CONFIG_DIR }}/nginx"
 GUACAMOLE_DIR: "{{ CONFIG_DIR }}/guacamole"
 
+# This is the directory where everything will be mounted inside the container
+GUACAMOLE_HOME: "/config"
+
 install_type: "cyverse"
 guacamole_version: "1.0.0"
 
@@ -11,7 +14,7 @@ guacamole_version: "1.0.0"
 guacd_ssl: false
 secret_key: "secret"
 timestamp_age_limit: 600000
-key_directory: "{{ GUACAMOLE_DIR }}/keys"
+key_directory: "{{ GUACAMOLE_HOME }}/keys"
 use_local_privkey: true
 
 # Variables for guacd

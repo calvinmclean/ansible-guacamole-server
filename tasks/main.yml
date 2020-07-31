@@ -30,8 +30,14 @@
     - "{{ CONFIG_DIR }}"
     - "{{ NGINX_DIR }}"
     - "{{ GUACAMOLE_DIR }}"
-    - "{{ key_directory }}"
+    - "{{ GUACAMOLE_DIR }}/keys"
     - "{{ GUACAMOLE_DIR }}/extensions"
+
+- name: link /etc/guacamole to GUACAMOLE_DIR
+  file:
+    src: "{{ GUACAMOLE_DIR }}"
+    dest: "/etc/guacamole"
+    state: link
 
 - name: Fill out Nginx template
   template:

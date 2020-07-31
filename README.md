@@ -8,6 +8,7 @@ This role will install and configure Guacamole for CyVerse using Docker Compose.
 | `CONFIG_DIR`          | `"/opt/guacamole"`             | this is the root of everything that will be configured on the target |
 | `NGINX_DIR`           | `"{{ CONFIG_DIR }}/nginx"`     | this is where we will setup Nginx configs and keys |
 | `GUACAMOLE_DIR`       | `"{{ CONFIG_DIR }}/guacamole"` | this is where we will setup all Guacamole configs |
+| `GUACAMOLE_HOME`      | `"/config"`                    | this is the directory inside the `guacamole` container that will hold all of the configuration, keys, and extensions |
 | `install_type`        | `"cyverse"`                    | this determines which theme extension to use. Can be: `"cyverse"`, `"jetstream"` |
 | `guacamole_version`   | `"1.0.0"`                      | used to tag Guacamole images and download authentication plugin |
 | `guacd_ssl`           | `false`                        | used in `guacamole.properties` template. Also enables extra tasks to configure SSL |
