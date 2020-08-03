@@ -1,6 +1,8 @@
 # ansible-guacamole-server
 This role will install and configure Guacamole for CyVerse using Docker Compose.
 
+[More information can be found here](https://github.com/cyverse/atmosphere-guides/tree/master/src/guacamole_administration)
+
 
 ### Role variables
 | Variable              | Default                        | Description |
